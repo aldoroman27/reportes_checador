@@ -1,6 +1,6 @@
 #Importamos nuestra librería de pandas para poder manipular los datos tanto de csv como de xlxs
 import pandas as pd
-from datetime import time, datetime, timedelta
+from datetime import time, datetime
 
 df = pd.read_csv('./reporte_todos.csv', skip_blank_lines=True, header=None) #Abrimos nuestro archivo csv para comenzar con la manipulación
 
@@ -26,6 +26,13 @@ df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
 # 7. Mostrar para verificar
 print(df.head())
 
+#Creamos un diccionario para definir horarios especiales (Becarios, horas extras, etc)
+becarios = {
+    17:{"entrada":time(9,0), "salidaComida":time(12,0), "regresoComida":time(12,50),"salida":time(15,0) }, #Aldo
+    36:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0) },# Ivan
+    7:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0)}, #Luis Barragán
+}
+
 #Creamos una función para clasificar por el tiempo el registro, es decir los registros del checador poniendo rangos de horas
 def clasificarRegistro(grupo):
     grupo["FechaHora"] = pd.to_datetime(grupo["Fecha"]+ " "+ grupo["Hora"], errors='coerce') #Hacemos la concatenación de la información
@@ -38,23 +45,36 @@ def clasificarRegistro(grupo):
         "Salida" : None
     }
 
-    for _, row in grupo_ordenado.iterrows(): #Interactuamos hasta encontrar una ,
+    hora_entrada = time(8,0)
+    hora_salida = time(18,0)
+
+    id_empleado = grupo_ordenado["idEmpleado"].iloc[0]
+
+    if id_empleado in becarios:
+        hora_entrada = becarios[id_empleado]["entrada"]
+        hora_salida = becarios[id_empleado]["salida"]
+
+    salida_minima = (datetime.combine(datetime.today(),hora_salida) - pd.Timedelta(minutes=30)).time()
+    #Antes _ donde dice idx
+    for idx, row in grupo_ordenado.iterrows(): #Interactuamos hasta encontrar una ,
         fecha_hora = row["FechaHora"]
+        is_last = idx == len(grupo_ordenado)-1
         if not isinstance(fecha_hora, datetime): #Si no es una fecha entonces pasamos a ejecutar el siguiente bloque de instrucciones
             continue
         hora = fecha_hora.time() #Definimos nuestra hora.
         
         #Definimos los rangos de entrada en este caso es de 7:20 - 9:30 am
-        if time(7,30) <= hora <= time(9,30) and eventosRegistro["Entrada"] is None:
+        if time(6,10) <= hora <= time(9,30) and eventosRegistro["Entrada"] is None:
             eventosRegistro["Entrada"] = hora #Si entra dentro de este rango entonces lo clasificamos como Entrada
         #Definimos los rangos de comida, que empiezan desde las 12:00 - 15:10
         elif time(12,00) <= hora <= time(15,10) and eventosRegistro["SalidaComida"] is None:
             eventosRegistro["SalidaComida"] = hora
         #Definimos nestros rangos de salida de la comida, que puede ser desde las 13:45 - 15:55
-        elif time(13,45) <= hora <= time(15,55) and eventosRegistro["RegresoComida"] is None:
+        elif time(13,00) <= hora <= time(16,15) and eventosRegistro["RegresoComida"] is None:
             eventosRegistro["RegresoComida"] = hora
-        elif hora >= time(17,0) and eventosRegistro["Salida"] is None:
-            eventosRegistro["Salida"] = hora
+        elif eventosRegistro["Salida"] is None:
+            if is_last and hora >= salida_minima:
+                eventosRegistro["Salida"] = hora
         
     total_registros = len(grupo_ordenado)
     estatus = "COMPLETO" if all(eventosRegistro.values()) else "FALTANTE"
@@ -65,7 +85,10 @@ def clasificarRegistro(grupo):
         "RegresoComida" : eventosRegistro["RegresoComida"],
         "Salida" : eventosRegistro["Salida"],
         "Registros" : total_registros,
-        "Estatus" : estatus
+        "Estatus" : estatus,
+        "HorariosEntradaEsperados": hora_entrada,
+        "HorarioSalidaEsperado":hora_salida
+
     })
 
 df_dias = df.groupby(["idEmpleado", "Empleado", "Fecha"], group_keys=False).apply(clasificarRegistro).reset_index()
@@ -116,6 +139,7 @@ def calcular_tiempos(row):
         print("Expeción: ", e)
         return pd.Series([None, None], index=["HorasTrabajadas", "MinutosRetardo"])
 
+
 resultados = df_dias.apply(calcular_tiempos, axis=1)
 
 
@@ -125,5 +149,5 @@ df_dias = pd.concat([df_dias, resultados], axis=1)
 print(df_dias[["idEmpleado","Empleado","Fecha", "Entrada","SalidaComida","RegresoComida", "Salida" ,"HorasTrabajadas", "MinutosRetardo", "Estatus"]].head())
 
 
-#df_dias.to_excel("reporte_final_todos.xlsx", index=False)#Guardamos nuestro archivo en un archivo .xlsx
+df_dias.to_excel("reporte_final_becarios.xlsx", index=False)#Guardamos nuestro archivo en un archivo .xlsx
 
