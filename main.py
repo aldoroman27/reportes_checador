@@ -32,7 +32,7 @@ class AsistenciaApp:
 
         self.importar = ModuloImportar(self.notebook, self.set_dataframe)
         self.resumen = ModuloResumen(self.notebook, self.get_dataframe)
-        self.buscar = ModuloBuscar(self.notebook, self.modulo_resumen.get_resumen_df)
+        self.buscar = ModuloBuscar(self.notebook, self.resumen.get_resumen_df)
 
     def mejorar_interfaz(self):
          

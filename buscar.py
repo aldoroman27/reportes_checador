@@ -32,30 +32,32 @@ class ModuloBuscar:
 
 
     def buscar(self):
-        df = self.get_dataframe()
-        if df is None:
-            messagebox.showerror("Error","Primero se debe de cargar un archivo")
+        resumen = self.get_dataframe()
+        if resumen is None or resumen.empty:
+            messagebox.showerror("Resumen no disponible", "Primero debes generar el resumen desde su pestaña.")
             return
-        
+
         id_empleado = self.entry_id.get().strip()
         if not id_empleado.isdigit():
-            messagebox.showwarning("ID NO VALIDO", "El ID debe de ser un número.")
+            messagebox.showwarning("ID inválido", "El ID debe ser un número.")
             return
-        
-        id_empleado = int(id_empleado)
-        resultados = df[df["idEmpleado"]==id_empleado]
 
-        if resultados.empty:
+        id_empleado = int(id_empleado)
+        filtrado = resumen[resumen["idEmpleado"] == id_empleado]
+
+        if filtrado.empty:
             messagebox.showinfo("Sin resultados", "No se encontraron registros con ese ID.")
+            return
 
         self.tree.delete(*self.tree.get_children())
-        self.tree["columns"] = list(resultados.columns)
-        for col in resultados.columns:
+        self.tree["columns"] = list(filtrado.columns)
+
+        for col in filtrado.columns:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=100)
 
-        for _, row in resultados.iterrows():
-            self.tree.insert("","end",values=list(row))
+        for _, row in filtrado.iterrows():
+            self.tree.insert("", "end", values=list(row))
 
 
 
