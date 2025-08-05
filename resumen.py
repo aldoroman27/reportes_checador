@@ -79,17 +79,18 @@ def clasificarRegistro(grupo):
         tarde_dt = datetime.combine(datetime.today(), tolerancia)
         retraso = str(entrada_real - tarde_dt)
 
+    #Retornamos una serie de pandas con la información que recogimos.
     return pd.Series({
-        "Entrada" : eventosRegistro["Entrada"],
-        "SalidaComida" : eventosRegistro["SalidaComida"],
-        "RegresoComida" : eventosRegistro["RegresoComida"],
-        "Salida" : eventosRegistro["Salida"],
-        "Registros" : total_registros,
-        "Estatus" : estatus,
-        "HorariosEntradaEsperados": hora_entrada,
-        "HorarioSalidaEsperado":hora_salida,
-        "HorasTrabajadas": horas_trabajadas,
-        "Retraso" : retraso
+        "Entrada" : eventosRegistro["Entrada"],#Asignamos la hora de de entrada
+        "SalidaComida" : eventosRegistro["SalidaComida"],#Asignamos la hora de salida a comer
+        "RegresoComida" : eventosRegistro["RegresoComida"],#Asignamos la hora de regreso de comida
+        "Salida" : eventosRegistro["Salida"],#Asignamos la hora de salida
+        "Registros" : total_registros,#Asignamos el conteo total de registros que se tuvieron
+        "Estatus" : estatus,#Asignamos si el estatus fue completo o faltante
+        "HorariosEntradaEsperados": hora_entrada,#Definimos los horarios esperados
+        "HorarioSalidaEsperado":hora_salida,#Hora de salida esperada (varía entre becario-trabajador)
+        "HorasTrabajadas": horas_trabajadas,#Un conteo de horas trabajadas
+        "Retraso" : retraso #El conteo de minutos después de que pasara la hora de entrada
 
     })
 
@@ -100,43 +101,46 @@ class ModuloResumen:
         self.tab_resumen = ttk.Frame(notebook)
         notebook.add(self.tab_resumen, text="Visualizar Resumen")
 
+        #Creamos un botón para generar el resumen y llamamos al método generar_resumen
         btn_generar = ttk.Button(self.tab_resumen, text="Generar resumen", command=self.generar_resumen)
         btn_generar.pack(pady=10)
-
+        #Generamos otro botón que será el asignado para exportar como excell
         btn_exportar_xlsx = ttk.Button(self.tab_resumen, text="Exportar como excel", command=self.exportar_excel)
         btn_exportar_xlsx.pack(pady=5)
-
+        #Creamos un frame para encapsular el arbol donde veremos la información recopilada
         self.frame_tabla = ttk.Frame(self.tab_resumen)
         self.frame_tabla.pack(fill="both", expand=True)
-
+        #Llamamos al arbol y lo asignamos dentro
         self.tree = ttk.Frame(self.tab_resumen)
         self.frame_tabla.pack(fil="both", expand=True)
-
+        #Hacemos la representación de la tabla
         self.tree = ttk.Treeview(self.frame_tabla, show="headings")
         self.tree.pack(side="left", fill="both", expand=True)
-
+        #Definimos un scroll para visualizar todos los posibles datos que tenemos.
         scrollbar = ttk.Scrollbar(self.frame_tabla, orient="vertical", command=self.tree.yview)
         scrollbar.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=scrollbar.set)
-
+    #Definimos una función para generar el resumen
     def generar_resumen(self):
-        df = self.get_dataframe()
-        if df is None:
+        df = self.get_dataframe()#Asignamos a una variable el dataframe generado anteriormente
+        if df is None:#Si el dataframe está vacío entonces mostramos un mensaje de error
             messagebox.showerror("Error", "Primero debes importar un archivo.")
             return
-        try:
-
+        try:#En caso contrario hacemos un bloque de instrucciones try
+            
             df["FechaHora"] = pd.to_datetime(df["Fecha"]+ " "+df["Hora"],errors="coerce")
             resumen = df.groupby(["idEmpleado", "Empleado", "Fecha"]).apply(clasificarRegistro).reset_index()
 
+            #Creamos un dataframe con el resumen generado
             self.df_resumen = resumen
 
             self.tree.delete(*self.tree.get_children())
             self.tree["columns"] = list(resumen.columns)
-
+            #Vamos llenando las columnas e insertando la información que encontremos
             for col in resumen.columns:
                 self.tree.heading(col, text=str(col))
                 self.tree.column(col, width=100)
+            #Vamos llenando las filas e insertando la información que tenemos.
             for _, row in resumen.iterrows():
                 fila = list(row)
                 idx_estatus = resumen.columns.get_loc("Estatus")
@@ -145,15 +149,17 @@ class ModuloResumen:
                 else:
                     fila[idx_estatus] = "❌ FALTANTE"
                 self.tree.insert("", "end", values=fila)
-        except Exception as e:
+        except Exception as e:#Hacemos el manejo del error y se lo mostramos al usuario
             messagebox.showerror("Error", str(e))
     
-
+    #Esta función es la encargada de poder mostrar este resumen en otras ventanas, la llamamos dentro de buscar.py
     def get_resumen_df(self):
         return self.df_resumen if hasattr(self, "df_resumen") else None
-
+    #Esta es la función encargada de poder exportar el df generado a un excell
     def exportar_excel(self):
+        #Hacemos un bloque tolerante a fallas con try y except
         try:
+            #Si no tenemos ningún csv, excell cargado entonces marcamos el error.
             if not hasattr(self, "df_resumen"):
                 messagebox.showerror("Error", "Primero genera el resumen antes de exportar.")
                 return
@@ -164,12 +170,15 @@ class ModuloResumen:
                 filetypes=[("Excel files", "*.xlsx")],
                 title="Guardar archivo como"
             )
+            #Si no se toma una ruta entonces retornamos directamente
             if not ruta_archivo:
                 return
 
             # Guardamos el archivo
             self.df_resumen.to_excel(ruta_archivo, index=False)
+            #Mostramos un mensaje de que el archivo fue guardado correctamente.
             messagebox.showinfo("Éxito", f"Archivo guardado correctamente:\n{ruta_archivo}")
-
+        #Manejamos el bloque de los posibles errores que se generen
         except Exception as e:
+            #En caso de no poder guardar el archivo entonces mostramos el error correspondiente.
             messagebox.showerror("Error", f"No se pudo guardar el archivo:\n{str(e)}")

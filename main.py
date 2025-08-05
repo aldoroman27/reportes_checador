@@ -6,7 +6,7 @@ from tkinter import ttk
 from importar import ModuloImportar
 from resumen import ModuloResumen
 from buscar import ModuloBuscar
-
+from todoslosRegistros import ModuloAllRegistros
 
 class AsistenciaApp:
     def __init__(self, root):
@@ -33,6 +33,7 @@ class AsistenciaApp:
         self.importar = ModuloImportar(self.notebook, self.set_dataframe)
         self.resumen = ModuloResumen(self.notebook, self.get_dataframe)
         self.buscar = ModuloBuscar(self.notebook, self.resumen.get_resumen_df)
+        self.todoslosRegistros = ModuloAllRegistros(self.notebook, self.get_dataframe)
 
     def mejorar_interfaz(self):
          
