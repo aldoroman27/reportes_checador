@@ -44,8 +44,8 @@ def clasificarRegistro(grupo):
             continue
         hora = fecha_hora.time() #Definimos nuestra hora.
         
-        #Definimos los rangos de entrada en este caso es de 7:20 - 9:30 am
-        if time(6,10) <= hora <= time(9,30) and eventosRegistro["Entrada"] is None:
+        #Definimos los rangos de entrada en este caso es de 6:10 - 10:15 am
+        if time(6,10) <= hora <= time(10,15) and eventosRegistro["Entrada"] is None:
             eventosRegistro["Entrada"] = hora #Si entra dentro de este rango entonces lo clasificamos como Entrada
         #Definimos los rangos de comida, que empiezan desde las 12:00 - 15:10
         elif time(12,00) <= hora <= time(16,15) and eventosRegistro["SalidaComida"] is None:
@@ -150,8 +150,7 @@ class ModuloResumen:
     
 
     def get_resumen_df(self):
-        return getattr(self, "resumen_df", None)
-
+        return self.df_resumen if hasattr(self, "df_resumen") else None
 
     def exportar_excel(self):
         try:
