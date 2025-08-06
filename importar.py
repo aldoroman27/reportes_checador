@@ -50,13 +50,28 @@ class ModuloImportar:
                 df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
             #En caso que la ruta termine con .xlsx entonces hacemos el siguiente bloque de instrucciones
             elif ruta.endswith(".xlsx"):
-                #Definimos la ruta y además que no tendrá Header, esta parte la tenemos que validar todavía
-                df = pd.read_excel(ruta, header=None)
-            else:
-                #En caso de abrir un formato no compatible, mostramos el mensaje correspondiente
-                messagebox.showerror("Error", "Formato no compatible.")
-                return
+                try:
+                    df = pd.read_excel(ruta, skiprows=3)
+                    # Filtrar solo las filas con fecha válida en 'Fecha/Hora'
+                    df = df[df['Fecha/Hora'].apply(lambda x: pd.to_datetime(x, errors='coerce')).notnull()].copy()
 
+                    # Eliminar columnas innecesarias
+                    columnas_a_eliminar = ['Unnamed: 0', 'Unnamed: 4', 'Código de Trabajo', "Tipo de Registro"]
+                    df.drop(columns=columnas_a_eliminar, inplace=True, errors='ignore')
+
+                    df.columns = ["idEmpleado", "Empleado", "Fecha"]
+                    # Resetear índice
+                    df.reset_index(drop=True, inplace=True)
+                    #Este bloque es para separar la fecha y hora
+                    df["Fecha"] = df["Fecha"].astype(str).str.strip()
+                    df["FechaHora"] = pd.to_datetime(df["Fecha"], errors="coerce")
+                    df["Fecha"] = df["FechaHora"].dt.date.astype(str)
+                    df["Hora"] = df["FechaHora"].dt.time.astype(str)
+                    df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
+                    print(df)
+                except Exception as e:
+                    messagebox.showerror("Error al leer Excel", str(e))
+                    return
             #Hacemos la asignación a nuestro df
             self.df = df
             self.set_dataframe(df)

@@ -1,13 +1,21 @@
 import tk as Tk
 from tkinter import ttk, messagebox, filedialog
 import pandas as pd
-from datetime import time, datetime, timedelta
+from datetime import time, datetime, timedelta, date
 
 #Definimos los horarios de los becarios para que se ajuste a los horarios correctamente el analisis.
 becarios = {
     17:{"entrada":time(9,0), "salidaComida":time(12,0), "regresoComida":time(12,50),"salida":time(15,0) }, #Aldo
     36:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0) },# Ivan
     7:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0)}, #Luis Barragán
+}
+#Asegurarnos del buen funcionamiento, los horarios y determinar una "fecha" de entrada para estos nuevos horarios
+#Definimos los horarios especiales, estos van a variar dependiendo la carga de trabajo.
+horario_especial = {
+    11:{"entrada":time(15,00), "salidaComida":time(19,00),"regresoComida":time(20,00),"salida":time(23,00)},#Ricardo
+    35:{"entrada":time(15,00), "salidaComida":time(19,00),"regresoComida":time(20,00), "salida":time(23,00)},#Royer
+    29:{"entrada":time(6,00), "salidaComida":time(11,30), "regresoComida":time(12,30),"salida":time(15,00)},#Erick
+    33:{"entrada":time(6,00), "salidaComida":time(), "regresoComida":time(), "salida":time(15,00)}#David
 }
 
 #Definimos nuestra función para poder clasificar los registros de nuestros usuarios
@@ -22,10 +30,15 @@ def clasificarRegistro(grupo):
         "Salida" : None
     }
 
-    #Definimos los horarios de entrada y salida de los trabajadores en común
+    #Definimos los horarios de entrada y salida de los trabajadores en común.
     hora_entrada = time(8,0)
     hora_salida = time(18,0)
-    
+    #Definimos los horarios comunes de salida a comer y regreso de comida.
+    horario_Salidacomida = time(11,00)
+    horario_Regresocomida = time(16,00)
+    #Obtenemos la fecha actual para hacer el registro de los nuevos horarios
+    fecha_actual = date.today()
+
     #Ubicamos el id de cada usuario
     id_empleado = grupo_ordenado["idEmpleado"].iloc[0]
     #Si el id del empleado coincide con el de los establecidos de los becarios entonces
@@ -34,6 +47,9 @@ def clasificarRegistro(grupo):
         hora_entrada = becarios[id_empleado]["entrada"]
         #Definimos su hora de salida indicada en nuestro diccionario
         hora_salida = becarios[id_empleado]["salida"]
+    elif id_empleado in horario_especial and fecha_actual >= date(2025,8,6):
+        hora_entrada = horario_especial[id_empleado]["entrada"]
+        hora_salida = horario_especial[id_empleado]["salida"]
     #Definimos la salida mínima
     salida_minima = (datetime.combine(datetime.today(),hora_salida) - pd.Timedelta(minutes=30)).time()
     #Antes _ donde dice idx
@@ -43,12 +59,14 @@ def clasificarRegistro(grupo):
         if not isinstance(fecha_hora, datetime): #Si no es una fecha entonces pasamos a ejecutar el siguiente bloque de instrucciones
             continue
         hora = fecha_hora.time() #Definimos nuestra hora.
-        
-        #Definimos los rangos de entrada en este caso es de 6:10 - 10:15 am
-        if time(6,10) <= hora <= time(10,15) and eventosRegistro["Entrada"] is None:
+        """
+        if
+        """
+        #Definimos los rangos de entrada en este caso es de 5:10 - 10:15 am
+        if time(5,10) <= hora <= time(10,15) and eventosRegistro["Entrada"] is None:
             eventosRegistro["Entrada"] = hora #Si entra dentro de este rango entonces lo clasificamos como Entrada
         #Definimos los rangos de comida, que empiezan desde las 12:00 - 15:10
-        elif time(12,00) <= hora <= time(16,15) and eventosRegistro["SalidaComida"] is None:
+        elif time(11,20) <= hora <= time(16,15) and eventosRegistro["SalidaComida"] is None:
             eventosRegistro["SalidaComida"] = hora
         #Definimos nestros rangos de salida de la comida, que puede ser desde las 13:45 - 15:55
         elif time(13,00) <= hora <= time(16,45) and eventosRegistro["RegresoComida"] is None:
@@ -72,7 +90,7 @@ def clasificarRegistro(grupo):
             horas_trabajadas = str(delta)
 
     #Hacemos el cáulculo del retardo.
-    tolerancia = (datetime.combine(datetime.today(), hora_entrada)+timedelta(minutes=1)).time()
+    tolerancia = (datetime.combine(datetime.today(), hora_entrada)+timedelta(minutes=0)).time()
     retraso = "-"
     if eventosRegistro["Entrada"] and eventosRegistro["Entrada"] > tolerancia:
         entrada_real = datetime.combine(datetime.today(), eventosRegistro["Entrada"])

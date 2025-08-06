@@ -29,7 +29,6 @@ class ModuloAllRegistros:
 
     def buscar(self):
         df = self.get_dataframe()
-        print(df.columns)
         if df is None or df.empty:
             messagebox.showerror("Error", "No hay datos disponibles. Primero importa un archivo.")
             return
