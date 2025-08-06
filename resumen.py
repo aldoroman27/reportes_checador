@@ -18,6 +18,20 @@ horario_especial = {
     33:{"entrada":time(6,00), "salidaComida":time(), "regresoComida":time(), "salida":time(15,00)}#David
 }
 
+#Definimos los rangos de los turnos
+rangos_turno = {
+    "diurno":{
+        "entrada":(time(5,10), time(10,15)),
+        "salida_comida":(time(11,00), time(16,15)),
+        "regreso_comida":(time(11,45), time(16,45)),
+    },
+    "vespertino":{
+        "entrada":(time(14,00), time(16,15)),
+        "salida_comida":(time(17,00), time(20,00)),
+        "regreso_comida":(time(17,45), time(20,50))
+    }
+}
+
 #Definimos nuestra función para poder clasificar los registros de nuestros usuarios
 def clasificarRegistro(grupo):
     grupo["FechaHora"] = pd.to_datetime(grupo["Fecha"]+ " "+ grupo["Hora"], errors='coerce') #Hacemos la concatenación de la información
@@ -59,9 +73,7 @@ def clasificarRegistro(grupo):
         if not isinstance(fecha_hora, datetime): #Si no es una fecha entonces pasamos a ejecutar el siguiente bloque de instrucciones
             continue
         hora = fecha_hora.time() #Definimos nuestra hora.
-        """
-        if
-        """
+
         #Definimos los rangos de entrada en este caso es de 5:10 - 10:15 am
         if time(5,10) <= hora <= time(10,15) and eventosRegistro["Entrada"] is None:
             eventosRegistro["Entrada"] = hora #Si entra dentro de este rango entonces lo clasificamos como Entrada
