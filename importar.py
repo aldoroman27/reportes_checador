@@ -68,7 +68,9 @@ class ModuloImportar:
                     df["Fecha"] = df["FechaHora"].dt.date.astype(str)
                     df["Hora"] = df["FechaHora"].dt.time.astype(str)
                     df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
-                    print(df)
+                    df = df["idEmpleado"].astype(int)
+                    print(df.head())
+                    print(df.info())
                 except Exception as e:
                     messagebox.showerror("Error al leer Excel", str(e))
                     return
