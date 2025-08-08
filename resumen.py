@@ -5,9 +5,9 @@ from datetime import time, datetime, timedelta, date
 
 #Definimos los horarios de los becarios para que se ajuste a los horarios correctamente el analisis.
 becarios = {
-    17:{"entrada":time(9,0), "salidaComida":time(12,0), "regresoComida":time(12,50),"salida":time(15,0) }, #Aldo
-    36:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0) },# Ivan
-    7:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0)}, #Luis Barragán
+    17:{"entrada":time(9,0), "salidaComida":time(12,0), "regresoComida":time(12,50),"salida":time(15,0), "Turno":"Becario" }, #Aldo
+    36:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0), "Turno":"Becario" },# Ivan
+    7:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0), "Turno": "Becario"}, #Luis Barragán
 }
 #Asegurarnos del buen funcionamiento, los horarios y determinar una "fecha" de entrada para estos nuevos horarios
 #Definimos los horarios especiales, estos van a variar dependiendo la carga de trabajo.
@@ -18,18 +18,55 @@ horario_especial = {
     33:{"entrada":time(6,00), "salidaComida":time(), "regresoComida":time(), "salida":time(15,00)}#David
 }
 
-#Definimos los rangos de los turnos
+#Comezamos definiendo los verdaderos horarios bases de nuestros trabajadores.
+horarios_base = {
+    "normal":{"entrada": time(8,0),"salida":time(18,00)}, #Horario normal de 08:00 - 18:00
+    "becario_it":{"entrada":time(9,0),"salida":time(15,00)}, #Horario de becario TI 09:00 - 15:00
+    "becario_CONALEP":{"entrada":time(8,0),"salida":time(16,00)}, #Horario de becarios CONALEP 08:00 - 16:00
+    "matutino":{"entrada":time(6,00),"salida":time(15,00)}, # Horario matutino (maquinados) 06:00 - 15:00
+    "vespertino":{"entrada":time(15,00),"salida":time(23,00)} # Horario vespertino (maquinados) 15:00 - 23:00
+}
+
+#Definimos los rangos de los turnos por horario
 rangos_turno = {
-    "diurno":{
-        "entrada":(time(5,10), time(10,15)),
-        "salida_comida":(time(11,00), time(16,15)),
-        "regreso_comida":(time(11,45), time(16,45)),
+    "normal":{ #Horario normal
+        "entrada":(time(6,10), time(10,15)),#Definimos un rango de entrada desde las 06:10 - 10:15 (máximo)
+        "salida_comida":(time(12,00), time(16,15)),#Definimos un rango de salida de comida 12:00 - 16:15 (máximo)
+        "regreso_comida":(time(13,00), time(16,45)),#Definimos un rango de regreso de comida 13:00 - 16:45 (máximo)
     },
-    "vespertino":{
-        "entrada":(time(14,00), time(16,15)),
-        "salida_comida":(time(17,00), time(20,00)),
-        "regreso_comida":(time(17,45), time(20,50))
+    "becario_it":{ #Definimos el horario del becario de TI
+        "entrada":(time(8,00), time(9,45)),#Definimos un rango de entrada desde las 08-00 - 09:45 (máximo)
+        "salida_comida":(time(12,00), time(12,45)),#Definimos un rango de salida a comer 12:00 - 12:45 (máximo)
+        "regreso_comida":(time(12,30), time(13,10))#Definimos un rango de regreso de comida 12:30 - 13:10 (máximo)
+    },
+    "becario_CONALEP":{ #Definimos el rango de horarios de los becarios del CONALEP
+        "entrada":(time(7,00), time(8,45)),#Definimos el rango de entrada desde las 07:00 - 08:45 (máximo)
+        "salida_comida":(time(14,00), time(14,30)),#Definimos el rango de salida a comer 14:00 - 14:30 (máximo)
+        "regreso_comida":(time(14,45), time(15,15))#Definimos el rango de regreso de comida 14:45 - 15:15 (máximo)
+    },
+    "matutino":{ #Definimos el rango de horarios de maquinados matutino
+        "entrada":(time(5,00), time(7,00)),#Definimos el rango de entrada desde las 05:00 - 07:00 (máximo)
+        "salida_comida":(time(11,30), time(12,45)),#Definimos el rango de salida a comer 11:30 - 12:45 (máximo)
+        "regreso_comida":(time(12,30), time(13,20))#DEfinimos el rango de regreso a comer 12:30 - 13:20 (máximo)
+    },
+    "vespertino":{#Definimos los rangos de horarios de maquinados vespertino
+        "entrada":(time(14,00), time(16,00)),#Definimos el rango de entrada 14:00 - 16:00 (máximo)
+        "salida_comida":(time(18,00), time(19,45)),#Definimos el rango de salida a comer 18:00 - 19:45 (máximo)
+        "regreso_comida":(time(18,45), time(20,20))#Definimos el rango de regreso de comida 18:45 - 20:20 (máximo)
     }
+}
+
+fecha_inicio_nuevos_horarios = date(2025,8,6) #Es decir que en 06/08/2025 iniciamos a contar los nuevos horarios
+
+#Definimos a los empleados con turnos "Especiales"
+empleados_turnos = {
+    17: "becario_it", #Becario de Ti
+    11: "vespertino", #Maquinados vespertino
+    29: "matutino", #Maquinados matutino
+    33: "matutino", #Maquinados matutino
+    35: "vespertino", #Maquinados vespertino
+    36: "becario_CONALEP",#Becario de Conalep IVAN
+    7: "becario_CONALEP" #Becario de Conalep Luis Barragán
 }
 
 #Definimos nuestra función para poder clasificar los registros de nuestros usuarios
@@ -41,56 +78,67 @@ def clasificarRegistro(grupo):
         "Entrada" : None, #Asignamos los valores a nuestras varibales del diccionario como None
         "SalidaComida" : None,
         "RegresoComida" : None,
-        "Salida" : None
+        "Salida" : None,
+        "Turno" : None
     }
 
-    #Definimos los horarios de entrada y salida de los trabajadores en común.
-    hora_entrada = time(8,0)
-    hora_salida = time(18,0)
-    #Definimos los horarios comunes de salida a comer y regreso de comida.
-    horario_Salidacomida = time(11,00)
-    horario_Regresocomida = time(16,00)
-    #Obtenemos la fecha actual para hacer el registro de los nuevos horarios
-    fecha_actual = date.today()
-
-    #Ubicamos el id de cada usuario
+    #Tomamos el id del empleado actual
     id_empleado = grupo_ordenado["idEmpleado"].iloc[0]
-    #Si el id del empleado coincide con el de los establecidos de los becarios entonces
-    if id_empleado in becarios:
-        #Definimos su hora de entrada indicada en nuestro diccionario
-        hora_entrada = becarios[id_empleado]["entrada"]
-        #Definimos su hora de salida indicada en nuestro diccionario
-        hora_salida = becarios[id_empleado]["salida"]
-    elif id_empleado in horario_especial and fecha_actual >= date(2025,8,6):
-        hora_entrada = horario_especial[id_empleado]["entrada"]
-        hora_salida = horario_especial[id_empleado]["salida"]
-    #Definimos la salida mínima
-    salida_minima = (datetime.combine(datetime.today(),hora_salida) - pd.Timedelta(minutes=30)).time()
-    #Antes _ donde dice idx
-    for idx, row in grupo_ordenado.iterrows(): #Interactuamos hasta encontrar una ,
+    #Fecha en la que se hace el registro
+    fecha_registro = grupo_ordenado["FechaHora"].dt.date.min()
+    #Definimos entonces el horario.
+    turno = empleados_turnos.get(id_empleado, "normal")
+    """"
+    Esta es una verificación temporal, si el empleado tiene vespertino o matutino y la fecha del registro es menor a 06/08/2025
+    entonces se le asginará autamitacmente el horario de normal.
+    """
+    if turno in ["vespertino", "matutino"] and fecha_registro < fecha_inicio_nuevos_horarios:
+        turno = "normal"
+
+    #Definimos los horarios de entrada y salida de los trabajadores en común.
+    hora_entrada = horarios_base[turno]["entrada"]
+    hora_salida = horarios_base[turno]["salida"]
+    #Definimos la salida mínima de los empleados
+    salida_minima = (datetime.combine(datetime.today(),hora_salida) - timedelta(minutes=30)).time()
+    #Definimos los rangos de entrada
+    rango_ent = rangos_turno[turno]["entrada"]
+    #Definimos los rangos de salida a comer
+    rango_sal_comida = rangos_turno[turno]["salida_comida"]
+    #Definimos los rangos de regreso de comida.
+    rango_reg_comida = rangos_turno[turno]["regreso_comida"]
+
+    #Comenzamos a iterar en nuestro dataframe
+    for idx,row in grupo_ordenado.iterrows():
+        #Obtenemos la fecha y hora del registro
         fecha_hora = row["FechaHora"]
         is_last = idx == len(grupo_ordenado)-1
-        if not isinstance(fecha_hora, datetime): #Si no es una fecha entonces pasamos a ejecutar el siguiente bloque de instrucciones
+        #Si no es una datetime nuestra fecha_hora
+        if not isinstance(fecha_hora, datetime):
             continue
-        hora = fecha_hora.time() #Definimos nuestra hora.
-
-        #Definimos los rangos de entrada en este caso es de 5:10 - 10:15 am
-        if time(5,10) <= hora <= time(10,15) and eventosRegistro["Entrada"] is None:
-            eventosRegistro["Entrada"] = hora #Si entra dentro de este rango entonces lo clasificamos como Entrada
-        #Definimos los rangos de comida, que empiezan desde las 12:00 - 15:10
-        elif time(11,20) <= hora <= time(16,15) and eventosRegistro["SalidaComida"] is None:
-            eventosRegistro["SalidaComida"] = hora
-        #Definimos nestros rangos de salida de la comida, que puede ser desde las 13:45 - 15:55
-        elif time(13,00) <= hora <= time(16,45) and eventosRegistro["RegresoComida"] is None:
-            eventosRegistro["RegresoComida"] = hora
+        #Definimos la hora usando .time en nuestra variable fecha_hora
+        hora = fecha_hora.time()
+        """
+        Definimos los rangos de entradas dependiendo de cada uno de los empleados.
+        """
+        #Si el primer registro que se detecta encaja dentro de los rangos y la entrada es definida como None entonces:
+        if rango_ent[0] <= hora <= rango_ent[1] and eventosRegistro["Entrada"] is None:
+            eventosRegistro["Entrada"] = hora #Se asigna ese registro de hora como la Entrada
+        #Si el segundo registro que se detecta encaja dentro de los rangos y la SalidaComida está como None entonces:
+        elif rango_sal_comida[0] <= hora <= rango_sal_comida[1] and eventosRegistro["SalidaComida"] is None:
+            eventosRegistro["SalidaComida"] = hora #Asignamos la hora de ese registro a nuestra SalidaComida
+        #Si el tercer registro que se detecta encaja dentro de los rangos y RegresoComida está como None entonces:
+        elif rango_reg_comida[0] <= hora <= rango_reg_comida[1] and eventosRegistro["RegresoComida"] is None:
+            eventosRegistro["RegresoComida"] = hora #Asignamos entonces la hora de ese registro a nuestro RegresoComida
+        #Si el último registro es None entonces
         elif eventosRegistro["Salida"] is None:
+            #Verificamos que sea el último y que además la hora sea mayor o igual a la salida mínima que tenemos
             if is_last and hora >= salida_minima:
-                eventosRegistro["Salida"] = hora
-    
+                eventosRegistro["Salida"] = hora #Asignamos entonces el registro como nuestra Salida        
+
     #Hacemos un conteo de los registros por día
     total_registros = len(grupo_ordenado)
     #Si se tiene más de 4 registros es considerado como completo, en caso de tener menos de 4 se considera como FALTANTE de registro
-    estatus = "COMPLETO" if all(eventosRegistro.values()) else "FALTANTE"
+    estatus = "COMPLETO" if total_registros >= 4 else "FALTANTE"
 
     #Hacemos el cálculo de las horas trabajadas
     horas_trabajadas = "-"
