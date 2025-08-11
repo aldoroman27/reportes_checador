@@ -3,25 +3,12 @@ from tkinter import ttk, messagebox, filedialog
 import pandas as pd
 from datetime import time, datetime, timedelta, date
 
-#Definimos los horarios de los becarios para que se ajuste a los horarios correctamente el analisis.
-becarios = {
-    17:{"entrada":time(9,0), "salidaComida":time(12,0), "regresoComida":time(12,50),"salida":time(15,0), "Turno":"Becario" }, #Aldo
-    36:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0), "Turno":"Becario" },# Ivan
-    7:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0), "Turno": "Becario"}, #Luis Barragán
-}
-#Asegurarnos del buen funcionamiento, los horarios y determinar una "fecha" de entrada para estos nuevos horarios
-#Definimos los horarios especiales, estos van a variar dependiendo la carga de trabajo.
-horario_especial = {
-    11:{"entrada":time(15,00), "salidaComida":time(19,00),"regresoComida":time(20,00),"salida":time(23,00)},#Ricardo
-    35:{"entrada":time(15,00), "salidaComida":time(19,00),"regresoComida":time(20,00), "salida":time(23,00)},#Royer
-    29:{"entrada":time(6,00), "salidaComida":time(11,30), "regresoComida":time(12,30),"salida":time(15,00)},#Erick
-    33:{"entrada":time(6,00), "salidaComida":time(), "regresoComida":time(), "salida":time(15,00)}#David
-}
-
 #Comezamos definiendo los verdaderos horarios bases de nuestros trabajadores.
 horarios_base = {
     "normal":{"entrada": time(8,0),"salida":time(18,00)}, #Horario normal de 08:00 - 18:00
-    "becario_it":{"entrada":time(9,0),"salida":time(15,00)}, #Horario de becario TI 09:00 - 15:00
+    "becario_it":{"entrada":time(9,0),"salida":time(15,00)}, #Horario de becario TI 09:00 - 15:007
+    "becario_calidad":{"entrada":time(8,0), "salida":time(14,00)}, #Horario del becario de calidad 08:00 - 14:00
+    "becaria_compras":{"entrada":time(8,0), "salida":time(17,00)}, #Horario de la becaria de compras 08:00 - 17:00
     "becario_CONALEP":{"entrada":time(8,0),"salida":time(16,00)}, #Horario de becarios CONALEP 08:00 - 16:00
     "matutino":{"entrada":time(6,00),"salida":time(15,00)}, # Horario matutino (maquinados) 06:00 - 15:00
     "vespertino":{"entrada":time(15,00),"salida":time(23,00)} # Horario vespertino (maquinados) 15:00 - 23:00
@@ -43,6 +30,16 @@ rangos_turno = {
         "entrada":(time(7,00), time(8,45)),#Definimos el rango de entrada desde las 07:00 - 08:45 (máximo)
         "salida_comida":(time(14,00), time(14,30)),#Definimos el rango de salida a comer 14:00 - 14:30 (máximo)
         "regreso_comida":(time(14,45), time(15,15))#Definimos el rango de regreso de comida 14:45 - 15:15 (máximo)
+    },
+    "becario_calidad":{
+        "entrada":(time(7,00), time(9,00)),
+        "salida_comida":(time(11,00), time(12,00)),
+        "regreso_comida":(time(11,30), time(12,00))
+    },
+    "becaria_compras":{
+        "entrada":(time(8,00), time(9,00)),
+        "salida_comida":(time(15,00),time(16,00)),
+        "regreso_comida":(time(15,30), time(16,30))
     },
     "matutino":{ #Definimos el rango de horarios de maquinados matutino
         "entrada":(time(5,00), time(7,00)),#Definimos el rango de entrada desde las 05:00 - 07:00 (máximo)
@@ -98,6 +95,15 @@ def clasificarRegistro(grupo):
     #Definimos los horarios de entrada y salida de los trabajadores en común.
     hora_entrada = horarios_base[turno]["entrada"]
     hora_salida = horarios_base[turno]["salida"]
+
+    #Verificar esta parte.
+    """
+    if id_empleado == 4 and fecha_registro.weekday() == 2:
+        hora_salida = time(14,00)
+        rangos_turno["becaria_compras"]["salida_comida"] == (time(12,00))
+        rango_vuelta_comida["becaria_compras"] == (time())
+    """
+
     #Definimos la salida mínima de los empleados
     salida_minima = (datetime.combine(datetime.today(),hora_salida) - timedelta(minutes=30)).time()
     #Definimos los rangos de entrada

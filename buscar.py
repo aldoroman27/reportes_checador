@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 #Importamos pandas para poder trabajar con tablas
 import pandas as pd
+from datetime import datetime, timedelta
 
 #Definimos nuestra clase para nuestro módulo buscar
 class ModuloBuscar:
@@ -32,6 +33,9 @@ class ModuloBuscar:
         self.scrollbar = ttk.Scrollbar(self.tab_buscar, orient="vertical", command=self.tree.yview)
         self.scrollbar.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=self.scrollbar.set)
+
+        self.label_retraso_total = ttk.Label(self.tab_buscar, text="Tiempo total de retraso: 0 minutos")
+        self.label_retraso_total.pack(pady=5)
 
     #Creamos una nueva función para hacer la búsqueda.
     def buscar(self):
@@ -68,5 +72,16 @@ class ModuloBuscar:
         for _, row in filtrado.iterrows():
             self.tree.insert("", "end", values=list(row))
 
-
-
+        #Calculamos los valores de retraso
+        total_retraso = timedelta()
+        for valor in filtrado["Retraso"]:
+            if isinstance(valor,str) and valor != "-":
+                try:
+                    h, m, s = map(int, valor.split(":"))
+                    total_retraso += timedelta(hours=h, minutes=m, seconds=s)
+                except:
+                    pass
+        #Mostrar los resultados en el label
+        minutos_totales = total_retraso.total_seconds()/60
+        nombre = filtrado["Empleado"].iloc[0]
+        self.label_retraso_total.config(text=f"El empleado {nombre} tiene un tiempo total de retardo: {int(minutos_totales)} minutos")

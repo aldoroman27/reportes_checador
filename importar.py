@@ -38,39 +38,32 @@ class ModuloImportar:
                 #Indicamos que nuestro header no será nada
                 df = pd.read_csv(ruta, header=None)
                 #Definimos los nombres de nuestras columnas
-                df.columns = ["Vacia1", "idEmpleado", "Empleado", "Fecha", "Vacia2", "Vacia3", "Normal"]
+                df.columns = ["Empleado", "Fecha", "Vacia1", "idEmpleado", "Entrada", "Checador"]
+                #df.columns = ["Vacia1", "idEmpleado", "Empleado", "Fecha", "Vacia2", "Vacia3", "Normal"]
                 #Este bloque es para separar la fecha y hora
                 df["Fecha"] = df["Fecha"].astype(str).str.strip()
                 df["FechaHora"] = pd.to_datetime(df["Fecha"], errors="coerce")
                 df["Fecha"] = df["FechaHora"].dt.date.astype(str)
                 df["Hora"] = df["FechaHora"].dt.time.astype(str)
                 #Eliminamos estas columnas que son información vacía que no nos sirve para hacer los reportes
-                df = df.drop(columns=["Vacia1", "Vacia2", "Vacia3", "Normal", "FechaHora"])
+                df = df.drop(columns=["Vacia1", "Entrada", "Checador"])
+                #df = df.drop(columns=["Vacia1", "Vacia2", "Vacia3", "Normal", "FechaHora"])
                 #Definimos nuestro df completo ahora si.
                 df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
             #En caso que la ruta termine con .xlsx entonces hacemos el siguiente bloque de instrucciones
             elif ruta.endswith(".xlsx"):
                 try:
-                    df = pd.read_excel(ruta, skiprows=3)
-                    # Filtrar solo las filas con fecha válida en 'Fecha/Hora'
-                    df = df[df['Fecha/Hora'].apply(lambda x: pd.to_datetime(x, errors='coerce')).notnull()].copy()
-
-                    # Eliminar columnas innecesarias
-                    columnas_a_eliminar = ['Unnamed: 0', 'Unnamed: 4', 'Código de Trabajo', "Tipo de Registro"]
-                    df.drop(columns=columnas_a_eliminar, inplace=True, errors='ignore')
-
-                    df.columns = ["idEmpleado", "Empleado", "Fecha"]
-                    # Resetear índice
-                    df.reset_index(drop=True, inplace=True)
+                    df = pd.read_excel(ruta)
+                    df.columns = ["Empleado", "Fecha", "Vacia1", "idEmpleado", "Entrada","Checador"]
                     #Este bloque es para separar la fecha y hora
                     df["Fecha"] = df["Fecha"].astype(str).str.strip()
                     df["FechaHora"] = pd.to_datetime(df["Fecha"], errors="coerce")
                     df["Fecha"] = df["FechaHora"].dt.date.astype(str)
                     df["Hora"] = df["FechaHora"].dt.time.astype(str)
+
+                    df = df.drop(columns=["Vacia1", "Entrada", "Checador"])
+
                     df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
-                    df = df["idEmpleado"].astype(int)
-                    print(df.head())
-                    print(df.info())
                 except Exception as e:
                     messagebox.showerror("Error al leer Excel", str(e))
                     return
