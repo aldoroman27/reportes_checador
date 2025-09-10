@@ -8,10 +8,12 @@ horarios_base = {
     "normal":{"entrada": time(8,0),"salida":time(18,00)}, #Horario normal de 08:00 - 18:00
     "becario_it":{"entrada":time(9,0),"salida":time(15,00)}, #Horario de becario TI 09:00 - 15:007
     "becario_calidad":{"entrada":time(8,0), "salida":time(14,00)}, #Horario del becario de calidad 08:00 - 14:00
-    "becaria_compras":{"entrada":time(8,0), "salida":time(17,00)}, #Horario de la becaria de compras 08:00 - 17:00
+    "becaria_compras":{"entrada":time(8,0), "salida":time(14,00)}, #Horario de la becaria de compras 08:00 - 17:00
     "becario_CONALEP":{"entrada":time(8,0),"salida":time(16,00)}, #Horario de becarios CONALEP 08:00 - 16:00
     "matutino":{"entrada":time(6,00),"salida":time(15,00)}, # Horario matutino (maquinados) 06:00 - 15:00
-    "vespertino":{"entrada":time(15,00),"salida":time(23,00)} # Horario vespertino (maquinados) 15:00 - 23:00
+    "horarioDavid":{"entrada":time(7,00), "salida":time(16,00)},
+    "vespertino":{"entrada":time(15,00),"salida":time(23,00)}, # Horario vespertino (maquinados) 15:00 - 23:00
+    "sabado":{"entrada":time(9,00), "salida":time(14,00)}#Horarios de sábado (just in case)
 }
 
 #Definimos los rangos de los turnos por horario
@@ -37,9 +39,9 @@ rangos_turno = {
         "regreso_comida":(time(11,30), time(12,00))
     },
     "becaria_compras":{
-        "entrada":(time(8,00), time(9,00)),
+        "entrada":(time(7,00), time(9,20)),
         "salida_comida":(time(15,00),time(16,00)),
-        "regreso_comida":(time(15,30), time(16,30))
+        "regreso_comida":(time(15,30), time(16,30)),
     },
     "matutino":{ #Definimos el rango de horarios de maquinados matutino
         "entrada":(time(5,00), time(7,00)),#Definimos el rango de entrada desde las 05:00 - 07:00 (máximo)
@@ -50,20 +52,35 @@ rangos_turno = {
         "entrada":(time(14,00), time(16,00)),#Definimos el rango de entrada 14:00 - 16:00 (máximo)
         "salida_comida":(time(18,00), time(19,45)),#Definimos el rango de salida a comer 18:00 - 19:45 (máximo)
         "regreso_comida":(time(18,45), time(20,20))#Definimos el rango de regreso de comida 18:45 - 20:20 (máximo)
+    },
+    "horarioDavid":{
+        "entrada":(time(6,00), time(8,00)),
+        "salida_comida":(time(12,30), time(13,30)),
+        "regreso_comida":(time(13,15),time(13,50))
+    },
+    "sabado":{
+        "entrada":(time(6,00), time(9,00)),
+        "salida_comida":(time(11,00), time(11,45)),
+        "regreso_comida":(time(11,45), time(12,30))
     }
 }
-
-fecha_inicio_nuevos_horarios = date(2025,8,6) #Es decir que en 06/08/2025 iniciamos a contar los nuevos horarios
+"""
+    Esta es la parte de posibles modificaciones que se pueden hacer a las fechas o rangos, ya sabrán ustedes.
+"""
+fecha_inicio_nuevos_horarios = date(2025,8,6) #Es decir que en 06/08/2025 iniciamos a contar los nuevos horarios.
+sabado_erick = date(2025,8,9)
 
 #Definimos a los empleados con turnos "Especiales"
 empleados_turnos = {
     17: "becario_it", #Becario de Ti
     11: "vespertino", #Maquinados vespertino
     29: "matutino", #Maquinados matutino
-    33: "matutino", #Maquinados matutino
+    33: "horarioDavid", #Maquinados matutino
     35: "vespertino", #Maquinados vespertino
     36: "becario_CONALEP",#Becario de Conalep IVAN
-    7: "becario_CONALEP" #Becario de Conalep Luis Barragán
+    4: "becaria_compras", #Becaria de compras
+    7: "becario_CONALEP", #Becario de Conalep Luis Barragán
+    8: "becario_calidad" #Becario de calidad
 }
 
 #Definimos nuestra función para poder clasificar los registros de nuestros usuarios
@@ -92,16 +109,18 @@ def clasificarRegistro(grupo):
     if turno in ["vespertino", "matutino"] and fecha_registro < fecha_inicio_nuevos_horarios:
         turno = "normal"
 
+    if turno in ["vespertino", "matutino"] and fecha_registro == sabado_erick:
+        turno = "sabado"
+
     #Definimos los horarios de entrada y salida de los trabajadores en común.
     hora_entrada = horarios_base[turno]["entrada"]
     hora_salida = horarios_base[turno]["salida"]
 
-    #Verificar esta parte.
     """
+    #Verificar esta parte.
     if id_empleado == 4 and fecha_registro.weekday() == 2:
+        print("Llegué aquí y salida fue modificada")
         hora_salida = time(14,00)
-        rangos_turno["becaria_compras"]["salida_comida"] == (time(12,00))
-        rango_vuelta_comida["becaria_compras"] == (time())
     """
 
     #Definimos la salida mínima de los empleados

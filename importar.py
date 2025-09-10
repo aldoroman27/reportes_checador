@@ -50,6 +50,7 @@ class ModuloImportar:
                 #df = df.drop(columns=["Vacia1", "Vacia2", "Vacia3", "Normal", "FechaHora"])
                 #Definimos nuestro df completo ahora si.
                 df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
+                print(df.head())
             #En caso que la ruta termine con .xlsx entonces hacemos el siguiente bloque de instrucciones
             elif ruta.endswith(".xlsx"):
                 try:
@@ -64,6 +65,7 @@ class ModuloImportar:
                     df = df.drop(columns=["Vacia1", "Entrada", "Checador"])
 
                     df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
+                    
                 except Exception as e:
                     messagebox.showerror("Error al leer Excel", str(e))
                     return
