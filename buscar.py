@@ -55,7 +55,7 @@ class ModuloBuscar:
         #En caso contrario reasignamos la varibale id_empleado pero ahora como un entero
         id_empleado = int(id_empleado)
         #Hacemos el filtrado dentro de nuestro df de resumen y buscamos por el id_empleado
-        filtrado = resumen[resumen["idEmpleado"] == id_empleado]
+        filtrado = resumen[resumen["idEmpleado"].astype(int) == id_empleado]
         #Si nuestro filtrado es vació o no encontró ese id dentro de nuestro df entonces mostramos un mensaje de que no hay resultados.
         if filtrado.empty:
             messagebox.showinfo("Sin resultados", "No se encontraron registros con ese ID.")

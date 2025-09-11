@@ -38,7 +38,7 @@ class ModuloImportar:
                 #Indicamos que nuestro header no será nada
                 df = pd.read_csv(ruta, header=None)
                 #Definimos los nombres de nuestras columnas
-                df.columns = ["Empleado", "Fecha", "Vacia1", "idEmpleado", "Entrada", "Checador"]
+                df.columns = ["idEmpleado", "Empleado", "Fecha", "Vacia1", "Entrada", "Checador"]
                 #df.columns = ["Vacia1", "idEmpleado", "Empleado", "Fecha", "Vacia2", "Vacia3", "Normal"]
                 #Este bloque es para separar la fecha y hora
                 df["Fecha"] = df["Fecha"].astype(str).str.strip()
@@ -50,7 +50,29 @@ class ModuloImportar:
                 #df = df.drop(columns=["Vacia1", "Vacia2", "Vacia3", "Normal", "FechaHora"])
                 #Definimos nuestro df completo ahora si.
                 df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
-                print(df.head())
+                df["idEmpleado"] = df["idEmpleado"].astype(str)
+                dic_idEmpleados = {
+                    "1":"01001",#Fernando
+                    "25":"01079",#Teresita
+                    "30":"01068",#Monica
+                    "18":"01029",#Vicente
+                    "3":"01031",#Manuel
+                    "19":"01073",#Fabian
+                    "32":"01086",#Oscar Romo
+                    "20":"01062",#Leonardo
+                    "13":"01059",#Angel Melgoza
+                    "15":"01078",#Jose Luis
+                    "35":"01087",#Royer
+                    "11":"01032",#Ricardo Escobedo
+                    "29":"01042",#Erick García
+                    "28":"01075", #Francisco
+                    "33":"01085", #David
+                    "12":"01064", #Kenly
+                    "21":"01074", #Salvador
+                    "31":"01084", #Carlos Alberto Aguirre   
+                }
+                df["idEmpleado"] = df["idEmpleado"].replace(dic_idEmpleados)
+                #df["idEmpleado"] = df["idEmpleado"].astype(int)
             #En caso que la ruta termine con .xlsx entonces hacemos el siguiente bloque de instrucciones
             elif ruta.endswith(".xlsx"):
                 try:
@@ -61,10 +83,12 @@ class ModuloImportar:
                     df["FechaHora"] = pd.to_datetime(df["Fecha"], errors="coerce")
                     df["Fecha"] = df["FechaHora"].dt.date.astype(str)
                     df["Hora"] = df["FechaHora"].dt.time.astype(str)
-
+                    tipo_dato = df.dtypes
+                    print(tipo_dato)
                     df = df.drop(columns=["Vacia1", "Entrada", "Checador"])
 
                     df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
+                    df["Empleado"] =df["idEmpleado"].replace("")
                     
                 except Exception as e:
                     messagebox.showerror("Error al leer Excel", str(e))

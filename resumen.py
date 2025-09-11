@@ -11,7 +11,7 @@ horarios_base = {
     "becaria_compras":{"entrada":time(8,0), "salida":time(14,00)}, #Horario de la becaria de compras 08:00 - 17:00
     "becario_CONALEP":{"entrada":time(8,0),"salida":time(16,00)}, #Horario de becarios CONALEP 08:00 - 16:00
     "matutino":{"entrada":time(6,00),"salida":time(15,00)}, # Horario matutino (maquinados) 06:00 - 15:00
-    "horarioDavid":{"entrada":time(7,00), "salida":time(16,00)},
+    "horarioRicardo":{"entrada":time(7,00), "salida":time(23,00)},
     "vespertino":{"entrada":time(15,00),"salida":time(23,00)}, # Horario vespertino (maquinados) 15:00 - 23:00
     "sabado":{"entrada":time(9,00), "salida":time(14,00)}#Horarios de sábado (just in case)
 }
@@ -19,7 +19,7 @@ horarios_base = {
 #Definimos los rangos de los turnos por horario
 rangos_turno = {
     "normal":{ #Horario normal
-        "entrada":(time(6,10), time(10,15)),#Definimos un rango de entrada desde las 06:10 - 10:15 (máximo)
+        "entrada":(time(6,00), time(10,15)),#Definimos un rango de entrada desde las 06:10 - 10:15 (máximo)
         "salida_comida":(time(12,00), time(16,15)),#Definimos un rango de salida de comida 12:00 - 16:15 (máximo)
         "regreso_comida":(time(13,00), time(16,45)),#Definimos un rango de regreso de comida 13:00 - 16:45 (máximo)
     },
@@ -53,15 +53,15 @@ rangos_turno = {
         "salida_comida":(time(18,00), time(19,45)),#Definimos el rango de salida a comer 18:00 - 19:45 (máximo)
         "regreso_comida":(time(18,45), time(20,20))#Definimos el rango de regreso de comida 18:45 - 20:20 (máximo)
     },
-    "horarioDavid":{
-        "entrada":(time(6,00), time(8,00)),
-        "salida_comida":(time(12,30), time(13,30)),
-        "regreso_comida":(time(13,15),time(13,50))
-    },
     "sabado":{
         "entrada":(time(6,00), time(9,00)),
         "salida_comida":(time(11,00), time(11,45)),
         "regreso_comida":(time(11,45), time(12,30))
+    },
+    "horarioRicardo":{
+        "entrada":(time(7,00), time(15,00)),
+        "salida_comida":(time(17,00), time(17,50)),
+        "regreso_comida":(time(17,45),time(18,48))
     }
 }
 """
@@ -72,21 +72,21 @@ sabado_erick = date(2025,8,9)
 
 #Definimos a los empleados con turnos "Especiales"
 empleados_turnos = {
-    17: "becario_it", #Becario de Ti
-    11: "vespertino", #Maquinados vespertino
-    29: "matutino", #Maquinados matutino
-    33: "horarioDavid", #Maquinados matutino
-    35: "vespertino", #Maquinados vespertino
-    36: "becario_CONALEP",#Becario de Conalep IVAN
-    4: "becaria_compras", #Becaria de compras
-    7: "becario_CONALEP", #Becario de Conalep Luis Barragán
-    8: "becario_calidad" #Becario de calidad
+    "17": "becario_it", #Becario de Ti
+    "15":"vespertino",
+    "11": "horarioRicardo", #Maquinados vespertino
+    "29": "matutino", #Maquinados matutino
+    "36": "becario_CONALEP",#Becario de Conalep IVAN
+    "4": "becaria_compras", #Becaria de compras
+    "7": "becario_CONALEP", #Becario de Conalep Luis Barragán
+    "8": "becario_calidad" #Becario de calidad
 }
 
 #Definimos nuestra función para poder clasificar los registros de nuestros usuarios
 def clasificarRegistro(grupo):
     grupo["FechaHora"] = pd.to_datetime(grupo["Fecha"]+ " "+ grupo["Hora"], errors='coerce') #Hacemos la concatenación de la información
     grupo_ordenado = grupo.sort_values("FechaHora").reset_index(drop=True) #Ordenamos los valores.
+    print(grupo_ordenado.head())
     #Creamos un diccionario con los posibles eventos que pueden surgir.
     eventosRegistro = {
         "Entrada" : None, #Asignamos los valores a nuestras varibales del diccionario como None

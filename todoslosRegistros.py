@@ -39,7 +39,7 @@ class ModuloAllRegistros:
             return
 
         id_empleado = int(id_empleado)
-        df_filtrado = df[df["idEmpleado"] == id_empleado]
+        df_filtrado = df[df["idEmpleado"].astype(int) == id_empleado]
 
         if df_filtrado.empty:
             messagebox.showinfo("Sin registros", "No se encontraron registros para ese ID.")

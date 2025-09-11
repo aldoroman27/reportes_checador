@@ -29,6 +29,7 @@ print(df.head())
 #Creamos un diccionario para definir horarios especiales (Becarios, horas extras, etc)
 becarios = {
     17:{"entrada":time(9,0), "salidaComida":time(12,0), "regresoComida":time(12,50),"salida":time(15,0) }, #Aldo
+    8:{"entrada":time(8,0), "salidaComida":time(12,0), "regresoComida":time(12,50), "salida":time(14,0)},#Carlos
     36:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0) },# Ivan
     7:{"entrada":time(8,0), "salidaComida":time(14,15), "regresoComida":time(15,10),"salida":time(16,0)}, #Luis Barragán
 }
