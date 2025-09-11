@@ -24,7 +24,11 @@ class ModuloBuscar:
 
         #Botón de busqueda.
         self.button_buscar = ttk.Button(self.tab_buscar, text="Buscar", command=self.buscar)
-        self.button_buscar.pack(pady=5)
+        self.button_buscar.pack(pady=10)
+
+        #Botón de conversión df->excel
+        self.button_convertir = ttk.Button(self.tab_buscar, text="Exportar")
+        self.button_buscar.pack(pady=15)
 
         #Area de los resultados
         self.tree = ttk.Treeview(self.tab_buscar, show="headings")
