@@ -197,6 +197,7 @@ def clasificarRegistro(grupo):
 
     })
 
+#---------------------------------------------------- Esta parte es la visual del programa ----------------------------------------------
 #Creamos una clase para mostrar el modulo de resumen
 class ModuloResumen:
     def __init__(self, notebook, get_dataframe_func):

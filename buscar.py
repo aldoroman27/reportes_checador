@@ -1,7 +1,7 @@
 #Importamos tkinter para poder seguir con lo visual
 import tkinter as tk
 #Importamos ttk y messagebox para mostrar información al usuairo
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 #Importamos pandas para poder trabajar con tablas
 import pandas as pd
 from datetime import datetime, timedelta
@@ -25,10 +25,12 @@ class ModuloBuscar:
         #Botón de busqueda.
         self.button_buscar = ttk.Button(self.tab_buscar, text="Buscar", command=self.buscar)
         self.button_buscar.pack(pady=10)
-
+        
+        """
         #Botón de conversión df->excel
         self.button_convertir = ttk.Button(self.tab_buscar, text="Exportar")
-        self.button_buscar.pack(pady=15)
+        self.button_convertir.pack(pady=11, side='right')
+        """
 
         #Area de los resultados
         self.tree = ttk.Treeview(self.tab_buscar, show="headings")
@@ -67,6 +69,7 @@ class ModuloBuscar:
         #Si encontramos entonces el id dentro de nuestro df comenzamos a llenar nuestro árbol para mostrar la información.
         self.tree.delete(*self.tree.get_children())
         self.tree["columns"] = list(filtrado.columns)
+        print(filtrado)
 
         #Llenamos las columnas
         for col in filtrado.columns:
@@ -89,3 +92,14 @@ class ModuloBuscar:
         minutos_totales = total_retraso.total_seconds()/60
         nombre = filtrado["Empleado"].iloc[0]
         self.label_retraso_total.config(text=f"El empleado {nombre} tiene un tiempo total de retardo: {int(minutos_totales)} minutos")
+    
+    """
+    def exportar_excell(self):
+        try:
+            if not hasattr(self, "df_resumen"):
+                messagebox.showerror("ERROR, primero debes de cargar un archivo CSV o XLS/XLSX, dirigase a la pantalla principal")
+            else:
+                ruta_archivo = filedialog.
+        except Exception as e:
+            messagebox.showerror("Error al realizar la conversión a un archivo xlsx, contacta al administrador")
+    """
