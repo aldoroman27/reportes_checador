@@ -68,8 +68,14 @@ class ModuloImportar:
                     "28":"01075", #Francisco
                     "33":"01085", #David
                     "12":"01064", #Kenly
-                    "21":"01074", #Salvador
-                    "31":"01084", #Carlos Alberto Aguirre   
+                    "22":"01074", #Salvador
+                    "31":"01084", #Carlos Alberto Aguirre
+                    "36":"014", #Ivan Olivares
+                    "17":"015", #Aldo Román
+                    "4":"016", #Zaida
+                    "8":"017", #Carlos Alberto
+                    "7":"013", #Luis Barragán
+                    "2":"01002",#Luis Lujano
                 }
                 df["idEmpleado"] = df["idEmpleado"].replace(dic_idEmpleados)
                 #df["idEmpleado"] = df["idEmpleado"].astype(int)

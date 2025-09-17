@@ -23,14 +23,12 @@ class ModuloBuscar:
         self.entry_id.pack(pady=5)
 
         #Botón de busqueda.
-        self.button_buscar = ttk.Button(self.tab_buscar, text="Buscar", command=self.buscar)
+        self.button_buscar = ttk.Button(self.tab_buscar, text="Buscar por ID", command=self.buscar)
         self.button_buscar.pack(pady=10)
-        
-        """
+
         #Botón de conversión df->excel
-        self.button_convertir = ttk.Button(self.tab_buscar, text="Exportar")
-        self.button_convertir.pack(pady=11, side='right')
-        """
+        self.button_convertir = ttk.Button(self.tab_buscar, text="Exportar como excel", command=self.exportar_excel)
+        self.button_convertir.pack(pady=10)
 
         #Area de los resultados
         self.tree = ttk.Treeview(self.tab_buscar, show="headings")
@@ -92,14 +90,23 @@ class ModuloBuscar:
         minutos_totales = total_retraso.total_seconds()/60
         nombre = filtrado["Empleado"].iloc[0]
         self.label_retraso_total.config(text=f"El empleado {nombre} tiene un tiempo total de retardo: {int(minutos_totales)} minutos")
+        self.df_filtradoExportar = filtrado
     
-    """
-    def exportar_excell(self):
+
+    def exportar_excel(self):
         try:
-            if not hasattr(self, "df_resumen"):
-                messagebox.showerror("ERROR, primero debes de cargar un archivo CSV o XLS/XLSX, dirigase a la pantalla principal")
+            if not hasattr(self, "df_filtradoExportar") or self.df_filtradoExportar.empty:
+                messagebox.showerror(title="Error al exportar",message="Error, primero debe de abrir un archivo xlsx o cvs y generar un reporte")
+                return
             else:
-                ruta_archivo = filedialog.
+                ruta_archivo = filedialog.asksaveasfilename(
+                    defaultextension=".xlsx",
+                    filetypes=[("Excel Files","*.xlsx")],
+                    title="Guardar archivo como:"
+                )
+                if not ruta_archivo:
+                    return
+                self.df_filtradoExportar.to_excel(ruta_archivo, index=False)
+                messagebox.showinfo("Éxito", f"Archivo guardado correctamente:\n{ruta_archivo}")
         except Exception as e:
             messagebox.showerror("Error al realizar la conversión a un archivo xlsx, contacta al administrador")
-    """

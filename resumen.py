@@ -72,14 +72,14 @@ sabado_erick = date(2025,8,9)
 
 #Definimos a los empleados con turnos "Especiales"
 empleados_turnos = {
-    "17": "becario_it", #Becario de Ti
-    "15":"vespertino",
-    "11": "horarioRicardo", #Maquinados vespertino
-    "29": "matutino", #Maquinados matutino
-    "36": "becario_CONALEP",#Becario de Conalep IVAN
-    "4": "becaria_compras", #Becaria de compras
-    "7": "becario_CONALEP", #Becario de Conalep Luis Barragán
-    "8": "becario_calidad" #Becario de calidad
+    "015": "becario_it", #Becario de Ti
+    "01078":"vespertino",
+    "01032": "horarioRicardo", #Maquinados vespertino
+    "01042": "matutino", #Maquinados matutino
+    "014": "becario_CONALEP",#Becario de Conalep IVAN
+    "016": "becaria_compras", #Becaria de compras
+    "013": "becario_CONALEP", #Becario de Conalep Luis Barragán
+    "017": "becario_calidad" #Becario de calidad
 }
 
 #Definimos nuestra función para poder clasificar los registros de nuestros usuarios
@@ -227,9 +227,6 @@ class ModuloResumen:
     #Definimos una función para generar el resumen
     def generar_resumen(self):
         df = self.get_dataframe()#Asignamos a una variable el dataframe generado anteriormente
-        if df is None:#Si el dataframe está vacío entonces mostramos un mensaje de error
-            messagebox.showerror("Error", "Primero debes importar un archivo.")
-            return
         try:#En caso contrario hacemos un bloque de instrucciones try
             
             df["FechaHora"] = pd.to_datetime(df["Fecha"]+ " "+df["Hora"],errors="coerce")
