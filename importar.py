@@ -89,8 +89,8 @@ class ModuloImportar:
                     df["FechaHora"] = pd.to_datetime(df["Fecha"], errors="coerce")
                     df["Fecha"] = df["FechaHora"].dt.date.astype(str)
                     df["Hora"] = df["FechaHora"].dt.time.astype(str)
-                    tipo_dato = df.dtypes
-                    print(tipo_dato)
+                    #tipo_dato = df.dtypes
+                    #print(tipo_dato)
                     df = df.drop(columns=["Vacia1", "Entrada", "Checador"])
 
                     df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]

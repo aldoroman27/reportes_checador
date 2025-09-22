@@ -67,7 +67,6 @@ class ModuloBuscar:
         #Si encontramos entonces el id dentro de nuestro df comenzamos a llenar nuestro árbol para mostrar la información.
         self.tree.delete(*self.tree.get_children())
         self.tree["columns"] = list(filtrado.columns)
-        print(filtrado)
 
         #Llenamos las columnas
         for col in filtrado.columns:

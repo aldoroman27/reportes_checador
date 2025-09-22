@@ -1,5 +1,7 @@
+#Se debe de hacer el pip install tk
 import tk as Tk
 from tkinter import ttk, messagebox, filedialog
+#Se debe de hacer el pip install pandas
 import pandas as pd
 from datetime import time, datetime, timedelta, date
 
