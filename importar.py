@@ -50,6 +50,7 @@ class ModuloImportar:
                 #df = df.drop(columns=["Vacia1", "Vacia2", "Vacia3", "Normal", "FechaHora"])
                 #Definimos nuestro df completo ahora si.
                 df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
+                #Cambiamos el tipo de valor de la columna empleado a string para poder modificarlo de manera correcta con los id´s que necesita RH
                 df["idEmpleado"] = df["idEmpleado"].astype(str)
                 dic_idEmpleados = {
                     "1":"01001",#Fernando
