@@ -247,6 +247,12 @@ class ModuloResumen:
             
             df["FechaHora"] = pd.to_datetime(df["Fecha"]+ " "+df["Hora"],errors="coerce")
             
+            #====== Llenamos las fechas faltantes ===================
+            fecha_minima = pd.to_datetime(df["Fecha"]).min()
+            fecha_maxima = pd.to_datetime(df["Fecha"]).max()
+            rango_de_fechas = pd.date_range(fecha_minima, fecha_maxima, freq="D").date.astype(str)
+
+
             #====================== Nuevo bloque experimental ==========================
             # Sacamos el rango de fechas de todo el dataset
             rango_fechas = pd.date_range(df["FechaHora"].dt.date.min(), 
