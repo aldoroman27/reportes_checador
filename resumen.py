@@ -13,7 +13,7 @@ horarios_base = {
     "becaria_compras":{"entrada":time(8,0), "salida":time(14,00)}, #Horario de la becaria de compras 08:00 - 17:00
     "becario_CONALEP":{"entrada":time(8,0),"salida":time(16,00)}, #Horario de becarios CONALEP 08:00 - 16:00
     "matutino":{"entrada":time(6,00),"salida":time(15,00)}, # Horario matutino (maquinados) 06:00 - 15:00
-    "horarioRicardo":{"entrada":time(7,00), "salida":time(23,00)},
+    "horarioRicardo":{"entrada":time(7,00), "salida":time(23,00)}, #Horario de Ricardo que puede ser que llegue desde las 7 y salir hasta las 23
     "vespertino":{"entrada":time(15,00),"salida":time(23,00)}, # Horario vespertino (maquinados) 15:00 - 23:00
     "sabado":{"entrada":time(9,00), "salida":time(14,00)}#Horarios de sábado (just in case)
 }
