@@ -3,10 +3,10 @@ import tkinter as tk
 #Importamos los módulos que nos ayudarán para la gestión de archivos, mensajes emergentes, etc
 from tkinter import ttk
 #Importamos la librería de os para trabajar con operaciones relacionadas al sistema operativo
-from importar import ModuloImportar
-from resumen import ModuloResumen
-from buscar import ModuloBuscar
-from todoslosRegistros import ModuloAllRegistros
+from methods.importar import ModuloImportar
+from methods.resumen import ModuloResumen
+from methods.buscar import ModuloBuscar
+from methods.todoslosRegistros import ModuloAllRegistros
 
 class AsistenciaApp:
     def __init__(self, root):

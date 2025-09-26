@@ -88,20 +88,21 @@ empleados_turnos = {
 def clasificarRegistro(grupo):
     grupo["FechaHora"] = pd.to_datetime(grupo["Fecha"]+ " "+ grupo["Hora"], errors='coerce') #Hacemos la concatenación de la información
     grupo_ordenado = grupo.sort_values("FechaHora").reset_index(drop=True) #Ordenamos los valores.
-    print(grupo_ordenado.head())
+    #print(grupo_ordenado.head())
     #Creamos un diccionario con los posibles eventos que pueden surgir.
     #Si el registro está vacío entonces mostramos el error
-    if grupo_ordenado.empty:
+    if grupo_ordenado["FechaHora"].isna().all() or len(grupo_ordenado) == 0:
         return pd.Series({
             "Entrada":None,
             "Inicio Descanso":None,
             "Regreso Descanso":None,
-            "Salida":"None",
+            "Salida":None,
             "Registros":0,
             "Estatus": "SIN REGISTRO",
             "HorariosEntradaEsperados":None,
             "HorariosSalidaEsperado":None,
-            "Retraso":None
+            "HorasTrabajadas":"-",
+            "Retraso":"-"
         })
 
     eventosRegistro = {
@@ -125,7 +126,7 @@ def clasificarRegistro(grupo):
     if turno in ["vespertino", "matutino"] and fecha_registro < fecha_inicio_nuevos_horarios:
         turno = "normal"
 
-    if turno in ["vespertino", "matutino"] and fecha_registro == sabado_erick:
+    if turno in ["vespertino", "matutino"] and fecha_registro.weekday() == 2:
         turno = "sabado"
 
     #Definimos los horarios de entrada y salida de los trabajadores en común.
@@ -179,7 +180,7 @@ def clasificarRegistro(grupo):
     #Hacemos un conteo de los registros por día
     total_registros = len(grupo_ordenado)
     #Si se tiene más de 4 registros es considerado como completo, en caso de tener menos de 4 se considera como FALTANTE de registro
-    estatus = "COMPLETO" if total_registros >= 4 else "FALTANTE"
+    estatus = "COMPLETO" if total_registros >= 4 else "FALTANTE" 
 
     #Hacemos el cálculo de las horas trabajadas
     horas_trabajadas = "-"
@@ -247,33 +248,35 @@ class ModuloResumen:
             
             df["FechaHora"] = pd.to_datetime(df["Fecha"]+ " "+df["Hora"],errors="coerce")
             
+            #====== Nuevo Bloque experimental ======================
             #====== Llenamos las fechas faltantes ===================
             fecha_minima = pd.to_datetime(df["Fecha"]).min()
             fecha_maxima = pd.to_datetime(df["Fecha"]).max()
-            rango_de_fechas = pd.date_range(fecha_minima, fecha_maxima, freq="D").date.astype(str)
-
-
-            #====================== Nuevo bloque experimental ==========================
-            # Sacamos el rango de fechas de todo el dataset
-            rango_fechas = pd.date_range(df["FechaHora"].dt.date.min(), 
-                                        df["FechaHora"].dt.date.max(), freq="D")
-
-            # Construimos todas las combinaciones posibles (empleados × fechas)
-            empleados = df[["idEmpleado", "Empleado"]].drop_duplicates()
-            fechas = pd.DataFrame({"Fecha": rango_fechas.date})
-
-            combinaciones = empleados.merge(fechas, how="cross")
-
-            # Unimos con los datos originales para rellenar los días faltantes
-            df = combinaciones.merge(df, on=["idEmpleado", "Empleado", "Fecha"], how="left")
+            rango_fechas = pd.date_range(fecha_minima, fecha_maxima, freq="D").date.astype(str)
+            print(rango_fechas)
             
-            # Sacamos el rango de fechas de todo el dataset
-            resumen = df.groupby(["idEmpleado", "Empleado", "Fecha"]).apply(clasificarRegistro).reset_index()
+            empleados = df["idEmpleado"].unique()
+            fechas_completas = pd.MultiIndex.from_product(
+                [empleados, rango_fechas], names=["idEmpleado", "Fecha"]
+            )
+            df_base = pd.DataFrame(index=fechas_completas).reset_index()
 
+            df_completo = pd.merge(df_base, df, on=["idEmpleado", "Fecha"], how="left")
+            if "Empleado" not in df_completo.columns:
+                df_completo = pd.merge(df_completo, df[["idEmpleado", "Empleado"]].drop_duplicates(),
+                                       on="idEmpleado", how="left")
+            print(df_completo.head(5))
+            # Sacamos el rango de fechas de todo el dataset
+            resumen = (
+                df_completo.groupby(["idEmpleado", "Empleado", "Fecha"])
+                .apply(clasificarRegistro)
+                .reset_index()
+            )
             #Creamos un dataframe con el resumen generado
             self.df_resumen = resumen
-            print(self.df_resumen)
+            #print(self.df_resumen) #Descomentar para testing en caso de ser necesario
 
+            #==============Mostramos el df en el treeview=============
             self.tree.delete(*self.tree.get_children())
             self.tree["columns"] = list(resumen.columns)
             #Vamos llenando las columnas e insertando la información que encontremos

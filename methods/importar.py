@@ -96,10 +96,12 @@ class ModuloImportar:
 
                     df = df[["idEmpleado", "Empleado", "Fecha", "Hora"]]
                     df["Empleado"] =df["idEmpleado"].replace("")
-                    
                 except Exception as e:
                     messagebox.showerror("Error al leer Excel", str(e))
                     return
+            else:
+                messagebox.showerror(title="Error: Tipo de Archivo NO perimitido", message="Error, este tipo de archivo no es permitido\nUtilice unicamente .csv o .xlsx")
+                return
             #Hacemos la asignación a nuestro df
             self.df = df
             self.set_dataframe(df)
