@@ -96,7 +96,7 @@ def clasificarRegistro(grupo):
     if grupo_ordenado["FechaHora"].isna().all():
         fecha_actual = pd.to_datetime(grupo_ordenado["Fecha"].iloc[0]).date()
         estatus_dia = "FIN DE SEMANA" if fecha_actual.weekday() >= 5 else "FALTA" # 5 es Sábado, 6 es Domingo
-        
+
         # Diccionario para días sin registro (con nombres corregidos)
         return pd.Series({
             "Entrada": "FIN DE SEMANA",
@@ -119,7 +119,7 @@ def clasificarRegistro(grupo):
         "Turno" : None
     }
 
-    id_empleado = str(grupo_ordenado["idEmpleado"].iloc[0]) # Convertir a str por seguridad
+    id_empleado = str(grupo_ordenado["idEmpleado"].iloc[0]) # Convertimos a str
     fecha_registro = grupo_ordenado["FechaHora"].dt.date.min()
     turno = empleados_turnos.get(id_empleado, "normal")
 
@@ -141,7 +141,7 @@ def clasificarRegistro(grupo):
     
     for idx, row in grupo_ordenado.iterrows():
         fecha_hora = row["FechaHora"]
-        if pd.isna(fecha_hora): continue
+        if pd.isna(fecha_hora) : continue
         
         hora = fecha_hora.time()
         is_last = (grupo_ordenado["FechaHora"].notna()).sum() -1 == idx
