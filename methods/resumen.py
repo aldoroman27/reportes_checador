@@ -72,6 +72,7 @@ rangos_turno = {
 fecha_inicio_nuevos_horarios = date(2025,8,6) #Es decir que en 06/08/2025 iniciamos a contar los nuevos horarios.
 sabado_erick = date(2025,8,9)
 
+
 #Definimos a los empleados con turnos "Especiales"
 empleados_turnos = {
     "015": "becario_it", #Becario de Ti
@@ -86,132 +87,106 @@ empleados_turnos = {
 
 #Definimos nuestra función para poder clasificar los registros de nuestros usuarios
 def clasificarRegistro(grupo):
-    grupo["FechaHora"] = pd.to_datetime(grupo["Fecha"]+ " "+ grupo["Hora"], errors='coerce') #Hacemos la concatenación de la información
-    grupo_ordenado = grupo.sort_values("FechaHora").reset_index(drop=True) #Ordenamos los valores.
-    #print(grupo_ordenado.head())
-    #Creamos un diccionario con los posibles eventos que pueden surgir.
-    #Si el registro está vacío entonces mostramos el error
-    if grupo_ordenado["FechaHora"].isna().all() or len(grupo_ordenado) == 0:
+     # Combina Fecha y Hora, los errores se convierten en NaT (Not a Time)
+    grupo["FechaHora"] = pd.to_datetime(grupo["Fecha"]+ " "+ grupo["Hora"], errors='coerce')
+    grupo_ordenado = grupo.sort_values("FechaHora").reset_index(drop=True)
+
+    # --- INICIA BLOQUE CORREGIDO Y MEJORADO ---
+    # Verifica si el grupo no tiene registros válidos
+    if grupo_ordenado["FechaHora"].isna().all():
+        fecha_actual = pd.to_datetime(grupo_ordenado["Fecha"].iloc[0]).date()
+        estatus_dia = "FIN DE SEMANA" if fecha_actual.weekday() >= 5 else "FALTA" # 5 es Sábado, 6 es Domingo
+        
+        # Diccionario para días sin registro (con nombres corregidos)
         return pd.Series({
-            "Entrada":None,
-            "Inicio Descanso":None,
-            "Regreso Descanso":None,
-            "Salida":None,
-            "Registros":0,
-            "Estatus": "SIN REGISTRO",
-            "HorariosEntradaEsperados":None,
-            "HorariosSalidaEsperado":None,
-            "HorasTrabajadas":"-",
-            "Retraso":"-"
+            "Entrada": "FIN DE SEMANA",
+            "Inicio Descanso": "FIN DE SEMANA", # CORREGIDO
+            "Regreso Descanso": "FIN DE SEMANA",
+            "Salida": "FIN DE SEMANA",
+            "Registros": 0,
+            "Estatus": estatus_dia, # Estatus mejorado
+            "HorariosEntradaEsperados": "FIN DE SEMANA",
+            "HorarioSalidaEsperado": "FIN DE SEMANA", # CORREGIDO
+            "HorasTrabajadas": "-",
+            "Retraso": "-"
         })
 
     eventosRegistro = {
-        "Entrada" : None, #Asignamos los valores a nuestras varibales del diccionario como None
+        "Entrada" : None,
         "SalidaComida" : None,
         "RegresoComida" : None,
         "Salida" : None,
         "Turno" : None
     }
 
-    #Tomamos el id del empleado actual
-    id_empleado = grupo_ordenado["idEmpleado"].iloc[0]
-    #Fecha en la que se hace el registro
+    id_empleado = str(grupo_ordenado["idEmpleado"].iloc[0]) # Convertir a str por seguridad
     fecha_registro = grupo_ordenado["FechaHora"].dt.date.min()
-    #Definimos entonces el horario.
     turno = empleados_turnos.get(id_empleado, "normal")
-    """"
-    Esta es una verificación temporal, si el empleado tiene vespertino o matutino y la fecha del registro es menor a 06/08/2025
-    entonces se le asginará autamitacmente el horario de normal.
-    """
+
     if turno in ["vespertino", "matutino"] and fecha_registro < fecha_inicio_nuevos_horarios:
         turno = "normal"
-
+    
+    # Esta lógica de sábado parece incorrecta si se basa en el día de la semana.
+    # Si miércoles es sábado, quizás hay otra regla de negocio. La mantengo por ahora.
     if turno in ["vespertino", "matutino"] and fecha_registro.weekday() == 2:
         turno = "sabado"
 
-    #Definimos los horarios de entrada y salida de los trabajadores en común.
     hora_entrada = horarios_base[turno]["entrada"]
     hora_salida = horarios_base[turno]["salida"]
-
-    """
-    #Verificar esta parte.
-    if id_empleado == 4 and fecha_registro.weekday() == 2:
-        print("Llegué aquí y salida fue modificada")
-        hora_salida = time(14,00)
-    """
-
-    #Definimos la salida mínima de los empleados
-    salida_minima = (datetime.combine(datetime.today(),hora_salida) - timedelta(minutes=30)).time()
-    #Definimos los rangos de entrada
+    
+    salida_minima = (datetime.combine(date.today(), hora_salida) - timedelta(minutes=30)).time()
     rango_ent = rangos_turno[turno]["entrada"]
-    #Definimos los rangos de salida a comer
     rango_sal_comida = rangos_turno[turno]["salida_comida"]
-    #Definimos los rangos de regreso de comida.
     rango_reg_comida = rangos_turno[turno]["regreso_comida"]
-
-    #Comenzamos a iterar en nuestro dataframe
-    for idx,row in grupo_ordenado.iterrows():
-        #Obtenemos la fecha y hora del registro
+    
+    for idx, row in grupo_ordenado.iterrows():
         fecha_hora = row["FechaHora"]
-        is_last = idx == len(grupo_ordenado)-1
-        #Si no es una datetime nuestra fecha_hora
-        if not isinstance(fecha_hora, datetime):
-            continue
-        #Definimos la hora usando .time en nuestra variable fecha_hora
+        if pd.isna(fecha_hora): continue
+        
         hora = fecha_hora.time()
-        """
-        Definimos los rangos de entradas dependiendo de cada uno de los empleados.
-        """
-        #Si el primer registro que se detecta encaja dentro de los rangos y la entrada es definida como None entonces:
+        is_last = (grupo_ordenado["FechaHora"].notna()).sum() -1 == idx
+
         if rango_ent[0] <= hora <= rango_ent[1] and eventosRegistro["Entrada"] is None:
-            eventosRegistro["Entrada"] = hora #Se asigna ese registro de hora como la Entrada
-        #Si el segundo registro que se detecta encaja dentro de los rangos y la SalidaComida está como None entonces:
+            eventosRegistro["Entrada"] = hora
         elif rango_sal_comida[0] <= hora <= rango_sal_comida[1] and eventosRegistro["SalidaComida"] is None:
-            eventosRegistro["SalidaComida"] = hora #Asignamos la hora de ese registro a nuestra SalidaComida
-        #Si el tercer registro que se detecta encaja dentro de los rangos y RegresoComida está como None entonces:
+            eventosRegistro["SalidaComida"] = hora
         elif rango_reg_comida[0] <= hora <= rango_reg_comida[1] and eventosRegistro["RegresoComida"] is None:
-            eventosRegistro["RegresoComida"] = hora #Asignamos entonces la hora de ese registro a nuestro RegresoComida
-        #Si el último registro es None entonces
-        elif eventosRegistro["Salida"] is None:
-            #Verificamos que sea el último y que además la hora sea mayor o igual a la salida mínima que tenemos
-            if is_last and hora >= salida_minima:
-                eventosRegistro["Salida"] = hora #Asignamos entonces el registro como nuestra Salida        
+            eventosRegistro["RegresoComida"] = hora
+        elif eventosRegistro["Salida"] is None and hora >= salida_minima:
+             # Se asigna como salida al último registro que cumpla la condición
+             eventosRegistro["Salida"] = hora
 
-    #Hacemos un conteo de los registros por día
-    total_registros = len(grupo_ordenado)
-    #Si se tiene más de 4 registros es considerado como completo, en caso de tener menos de 4 se considera como FALTANTE de registro
-    estatus = "COMPLETO" if total_registros >= 4 else "FALTANTE" 
-
-    #Hacemos el cálculo de las horas trabajadas
+    total_registros = (grupo_ordenado["FechaHora"].notna()).sum()
+    estatus = "✅ COMPLETO" if total_registros >= 4 else "❌ FALTANTE"
+    
     horas_trabajadas = "-"
     if eventosRegistro["Entrada"] and eventosRegistro["Salida"]:
-        entrada_dt = datetime.combine(datetime.today(), eventosRegistro["Entrada"])
-        salida_dt = datetime.combine(datetime.today(), eventosRegistro["Salida"])
+        entrada_dt = datetime.combine(date.today(), eventosRegistro["Entrada"])
+        salida_dt = datetime.combine(date.today(), eventosRegistro["Salida"])
         if salida_dt > entrada_dt:
             delta = salida_dt - entrada_dt
             horas_trabajadas = str(delta)
-
-    #Hacemos el cáulculo del retardo.
-    tolerancia = (datetime.combine(datetime.today(), hora_entrada)+timedelta(minutes=0)).time()
+    
     retraso = "-"
-    if eventosRegistro["Entrada"] and eventosRegistro["Entrada"] > tolerancia:
-        entrada_real = datetime.combine(datetime.today(), eventosRegistro["Entrada"])
-        tarde_dt = datetime.combine(datetime.today(), tolerancia)
-        retraso = str(entrada_real - tarde_dt)
+    if eventosRegistro["Entrada"]:
+        tolerancia = (datetime.combine(date.today(), hora_entrada)).time()
+        if eventosRegistro["Entrada"] > tolerancia:
+            entrada_real = datetime.combine(date.today(), eventosRegistro["Entrada"])
+            tarde_dt = datetime.combine(date.today(), tolerancia)
+            retraso = str(entrada_real - tarde_dt)
 
-    #Retornamos una serie de pandas con la información que recogimos.
+    # Diccionario para días normales
     return pd.Series({
-        "Entrada" : eventosRegistro["Entrada"],#Asignamos la hora de de entrada
-        "Inicio Decanso" : eventosRegistro["SalidaComida"],#Asignamos la hora de salida a comer
-        "Regreso Descanso" : eventosRegistro["RegresoComida"],#Asignamos la hora de regreso de comida
-        "Salida" : eventosRegistro["Salida"],#Asignamos la hora de salida
-        "Registros" : total_registros,#Asignamos el conteo total de registros que se tuvieron
-        "Estatus" : estatus,#Asignamos si el estatus fue completo o faltante
-        "HorariosEntradaEsperados": hora_entrada,#Definimos los horarios esperados
-        "HorarioSalidaEsperado":hora_salida,#Hora de salida esperada (varía entre becario-trabajador)
-        "HorasTrabajadas": horas_trabajadas,#Un conteo de horas trabajadas
-        "Retraso" : retraso #El conteo de minutos después de que pasara la hora de entrada
-
+        "Entrada" : eventosRegistro["Entrada"],
+        "Inicio Descanso" : eventosRegistro["SalidaComida"],
+        "Regreso Descanso" : eventosRegistro["RegresoComida"],
+        "Salida" : eventosRegistro["Salida"],
+        "Registros" : total_registros,
+        "Estatus" : estatus,
+        "HorariosEntradaEsperados": hora_entrada,
+        "HorarioSalidaEsperado": hora_salida,
+        "HorasTrabajadas": horas_trabajadas,
+        "Retraso" : retraso
     })
 
 #---------------------------------------------------- Esta parte es la visual del programa ----------------------------------------------
@@ -248,10 +223,11 @@ class ModuloResumen:
             
             df["FechaHora"] = pd.to_datetime(df["Fecha"]+ " "+df["Hora"],errors="coerce")
             
-            #====== Nuevo Bloque experimental ======================
-            #====== Llenamos las fechas faltantes ===================
+            #====== Nuevo Bloque experimental ========================
+            #====== Llenamos las fechas faltantes ====================
             fecha_minima = pd.to_datetime(df["Fecha"]).min()
             fecha_maxima = pd.to_datetime(df["Fecha"]).max()
+            #=========================================================
             rango_fechas = pd.date_range(fecha_minima, fecha_maxima, freq="D").date.astype(str)
             print(rango_fechas)
             
@@ -260,13 +236,16 @@ class ModuloResumen:
                 [empleados, rango_fechas], names=["idEmpleado", "Fecha"]
             )
             df_base = pd.DataFrame(index=fechas_completas).reset_index()
-
-            df_completo = pd.merge(df_base, df, on=["idEmpleado", "Fecha"], how="left")
-            if "Empleado" not in df_completo.columns:
-                df_completo = pd.merge(df_completo, df[["idEmpleado", "Empleado"]].drop_duplicates(),
-                                       on="idEmpleado", how="left")
+            #Posible fix a las fechas faltantes.
+            #Creamos un diccionario que va a mapear cada idEmpleado con su respectivo nombre.
+            mapa_nombres = df[['idEmpleado','Empleado']].drop_duplicates().set_index('idEmpleado')['Empleado']
+            #Usamos ese mapa para añadir la columna de 'Empleado' a nuestro df.
+            df_base['Empleado'] = df_base['idEmpleado'].map(mapa_nombres)
+            df_completo = pd.merge(df_base, df.drop(columns=['Empleado']), on=["idEmpleado","Fecha"], how="left")
+            #Encontramos la posible solución 
             print(df_completo.head(5))
             # Sacamos el rango de fechas de todo el dataset
+            #Aquí ta el error
             resumen = (
                 df_completo.groupby(["idEmpleado", "Empleado", "Fecha"])
                 .apply(clasificarRegistro)
@@ -288,12 +267,13 @@ class ModuloResumen:
                 fila = list(row)
                 idx_estatus = resumen.columns.get_loc("Estatus")
                 if fila[idx_estatus] == "COMPLETO":
-                    fila[idx_estatus] = "✅ COMPLETO"
+                    fila[idx_estatus] = " COMPLETO"
                 else:
-                    fila[idx_estatus] = "❌ FALTANTE"
+                    fila[idx_estatus] = "X FALTANTE"
                 self.tree.insert("", "end", values=fila)
         except Exception as e:#Hacemos el manejo del error y se lo mostramos al usuario
             messagebox.showerror("Error", str(e))
+            return
     
     #Esta función es la encargada de poder mostrar este resumen en otras ventanas, la llamamos dentro de buscar.py
     def get_resumen_df(self):
