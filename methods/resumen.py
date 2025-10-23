@@ -56,12 +56,12 @@ rangos_turno = {
         "salida_comida":(time(18,00), time(19,45)),#Definimos el rango de salida a comer 18:00 - 19:45 (máximo)
         "regreso_comida":(time(18,45), time(20,20))#Definimos el rango de regreso de comida 18:45 - 20:20 (máximo)
     },
-    "sabado":{
-        "entrada":(time(6,00), time(9,00)),
-        "salida_comida":(time(11,00), time(11,45)),
-        "regreso_comida":(time(11,45), time(12,30))
+    "sabado":{#Definimos los rangos de horarios para el turno sabatino
+        "entrada":(time(6,00), time(9,00)), #Definimos el rango de entrada desde las 06:00 - 09:00 (máximo)
+        "salida_comida":(time(11,00), time(11,45)), #Definimos el rango de salida para la comida 11:00 - 11:45 (máximo)
+        "regreso_comida":(time(11,45), time(12,30)) #Definimos el rango de la salida de regreso de comida 11:45 - 12:30 (máximo)
     },
-    "horarioRicardo":{
+    "horarioRicardo":{ #Definimos un rango de entrada para ricardo que es algo rotativo (de momento inactivo ya que se encuentra en el turno nocturno)
         "entrada":(time(7,00), time(15,00)),
         "salida_comida":(time(17,00), time(17,50)),
         "regreso_comida":(time(17,45),time(18,48))
@@ -106,7 +106,7 @@ def clasificarRegistro(grupo):
         estatus_dia = "FALTA" if fecha_actual.weekday() < 5 else "FIN DE SEMANA" # 5 es Sábado, 6 es Domingo
         print("Hago la comparación con fin de semana")
         if estatus_dia == "FIN DE SEMANA":
-            # Diccionario para días sin registro (con nombres corregidos)
+            # Diccionario para fines de semana
             return pd.Series({
                 "Entrada": "FIN DE SEMANA",
                 "Inicio Descanso": "FIN DE SEMANA", # CORREGIDO
@@ -119,21 +119,22 @@ def clasificarRegistro(grupo):
                 "HorasTrabajadas": "-",
                 "Retraso": "-"
             })
-        
+       #Si el status del día es Falta (no cuenta con registros y no es en fin de semana) 
         elif estatus_dia == "FALTA":
+            #Retornamos un diccionario que tenga el status de Falta
             return pd.Series({
                 "Entrada": "FALTA",
-                "Inicio Descanso": "FALTA", # CORREGIDO
+                "Inicio Descanso": "FALTA",
                 "Regreso Descanso": "FALTA",
                 "Salida": "FALTA",
                 "Registros": 0,
-                "Estatus": estatus_dia, # Estatus mejorado
+                "Estatus": estatus_dia,
                 "HorariosEntradaEsperados": "-",
-                "HorarioSalidaEsperado": "-", # CORREGIDO
+                "HorarioSalidaEsperado": "-",
                 "HorasTrabajadas": None,
                 "Retraso": "-"
             })
-
+    #Eventos de registro los manetemos como None
     eventosRegistro = {
         "Entrada" : None,
         "SalidaComida" : None,
@@ -143,7 +144,6 @@ def clasificarRegistro(grupo):
     }
 
     id_empleado = str(grupo_ordenado["idEmpleado"].iloc[0]) # Convertimos a str
-    fecha_registro = grupo_ordenado["FechaHora"].dt.date.min()
     turno = empleados_turnos.get(id_empleado, "normal")
 
 
