@@ -12,6 +12,7 @@ horarios_base = {
     "becario_calidad":{"entrada":time(8,0), "salida":time(14,00)}, #Horario del becario de calidad 08:00 - 14:00
     "becaria_compras":{"entrada":time(8,0), "salida":time(14,00)}, #Horario de la becaria de compras 08:00 - 17:00
     "becario_CONALEP":{"entrada":time(8,0),"salida":time(16,00)}, #Horario de becarios CONALEP 08:00 - 16:00
+    "nocturno":{"entrada":time(23,00), "salida":time(6,00)}, #Horario de salida para el turno nocturno
     "matutino":{"entrada":time(6,00),"salida":time(15,00)}, # Horario matutino (maquinados) 06:00 - 15:00
     "horarioRicardo":{"entrada":time(7,00), "salida":time(23,00)}, #Horario de Ricardo que puede ser que llegue desde las 7 y salir hasta las 23
     "vespertino":{"entrada":time(15,00),"salida":time(23,00)}, # Horario vespertino (maquinados) 15:00 - 23:00
@@ -64,6 +65,11 @@ rangos_turno = {
         "entrada":(time(7,00), time(15,00)),
         "salida_comida":(time(17,00), time(17,50)),
         "regreso_comida":(time(17,45),time(18,48))
+    },
+    "nocturno":{
+        "entrada":(time(22,00), time(00,00)),
+        "salida_comida":(time(3,00),time(5,00)),
+        "regreso_comida":(time(3,45),time(5,45))
     }
 }
 """
@@ -79,6 +85,7 @@ empleados_turnos = {
     "01078":"vespertino",
     "01032": "horarioRicardo", #Maquinados vespertino
     "01042": "matutino", #Maquinados matutino
+    "01087": "nocturno", #Royer turno nocturno
     "014": "becario_CONALEP",#Becario de Conalep IVAN
     "016": "becaria_compras", #Becaria de compras
     "013": "becario_CONALEP", #Becario de Conalep Luis Barragán
@@ -95,21 +102,37 @@ def clasificarRegistro(grupo):
     # Verifica si el grupo no tiene registros válidos
     if grupo_ordenado["FechaHora"].isna().all():
         fecha_actual = pd.to_datetime(grupo_ordenado["Fecha"].iloc[0]).date()
-        estatus_dia = "FIN DE SEMANA" if fecha_actual.weekday() >= 5 else "FALTA" # 5 es Sábado, 6 es Domingo
-
-        # Diccionario para días sin registro (con nombres corregidos)
-        return pd.Series({
-            "Entrada": "FIN DE SEMANA",
-            "Inicio Descanso": "FIN DE SEMANA", # CORREGIDO
-            "Regreso Descanso": "FIN DE SEMANA",
-            "Salida": "FIN DE SEMANA",
-            "Registros": 0,
-            "Estatus": estatus_dia, # Estatus mejorado
-            "HorariosEntradaEsperados": "FIN DE SEMANA",
-            "HorarioSalidaEsperado": "FIN DE SEMANA", # CORREGIDO
-            "HorasTrabajadas": "-",
-            "Retraso": "-"
-        })
+        print("Entré a la comparación")
+        estatus_dia = "FALTA" if fecha_actual.weekday() < 5 else "FIN DE SEMANA" # 5 es Sábado, 6 es Domingo
+        print("Hago la comparación con fin de semana")
+        if estatus_dia == "FIN DE SEMANA":
+            # Diccionario para días sin registro (con nombres corregidos)
+            return pd.Series({
+                "Entrada": "FIN DE SEMANA",
+                "Inicio Descanso": "FIN DE SEMANA", # CORREGIDO
+                "Regreso Descanso": "FIN DE SEMANA",
+                "Salida": "FIN DE SEMANA",
+                "Registros": 0,
+                "Estatus": estatus_dia, # Estatus mejorado
+                "HorariosEntradaEsperados": "FIN DE SEMANA",
+                "HorarioSalidaEsperado": "FIN DE SEMANA", # CORREGIDO
+                "HorasTrabajadas": "-",
+                "Retraso": "-"
+            })
+        
+        elif estatus_dia == "FALTA":
+            return pd.Series({
+                "Entrada": "FALTA",
+                "Inicio Descanso": "FALTA", # CORREGIDO
+                "Regreso Descanso": "FALTA",
+                "Salida": "FALTA",
+                "Registros": 0,
+                "Estatus": estatus_dia, # Estatus mejorado
+                "HorariosEntradaEsperados": "-",
+                "HorarioSalidaEsperado": "-", # CORREGIDO
+                "HorasTrabajadas": None,
+                "Retraso": "-"
+            })
 
     eventosRegistro = {
         "Entrada" : None,
@@ -123,13 +146,6 @@ def clasificarRegistro(grupo):
     fecha_registro = grupo_ordenado["FechaHora"].dt.date.min()
     turno = empleados_turnos.get(id_empleado, "normal")
 
-    if turno in ["vespertino", "matutino"] and fecha_registro < fecha_inicio_nuevos_horarios:
-        turno = "normal"
-    
-    # Esta lógica de sábado parece incorrecta si se basa en el día de la semana.
-    # Si miércoles es sábado, quizás hay otra regla de negocio. La mantengo por ahora.
-    if turno in ["vespertino", "matutino"] and fecha_registro.weekday() == 2:
-        turno = "sabado"
 
     hora_entrada = horarios_base[turno]["entrada"]
     hora_salida = horarios_base[turno]["salida"]
