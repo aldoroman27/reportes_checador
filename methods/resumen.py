@@ -284,7 +284,7 @@ class ModuloResumen:
                 idx_estatus = resumen.columns.get_loc("Estatus")
                 if fila[idx_estatus] == "COMPLETO":
                     fila[idx_estatus] = " COMPLETO"
-                else:
+                elif fila[idx_estatus] == "FALTANTE":
                     fila[idx_estatus] = "X FALTANTE"
                 self.tree.insert("", "end", values=fila)
         except Exception as e:#Hacemos el manejo del error y se lo mostramos al usuario
